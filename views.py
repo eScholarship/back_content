@@ -6,6 +6,7 @@ from django.contrib import messages
 from submission import models, forms, logic
 from core import models as core_models
 from plugins.back_content import forms as bc_forms
+from production import logic as prod_logic
 
 
 @staff_member_required
@@ -46,6 +47,18 @@ def article(request, article_id):
                 pub_form.save()
                 return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
+        if 'xml' in request.POST:
+            for uploaded_file in request.FILES.getlist('xml-file'):
+                prod_logic.save_galley(article, request, uploaded_file, True, "XML", False)
+
+        if 'pdf' in request.POST:
+            for uploaded_file in request.FILES.getlist('pdf-file'):
+                prod_logic.save_galley(article, request, uploaded_file, True, "PDF", False)
+
+        if 'other' in request.POST:
+            for uploaded_file in request.FILES.getlist('other-file'):
+                prod_logic.save_galley(article, request, uploaded_file, True, "Other", True)
+
         if 'add_author' in request.POST:
             form = forms.AuthorForm(request.POST)
             modal = 'author'
@@ -73,6 +86,7 @@ def article(request, article_id):
         'article_form': article_form,
         'form': author_form,
         'pub_form': pub_form,
+        'galleys': prod_logic.get_all_galleys(article),
         'modal': modal
     }
 
