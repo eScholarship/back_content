@@ -7,6 +7,7 @@ from submission import models, forms, logic
 from core import models as core_models
 from plugins.back_content import forms as bc_forms
 from production import logic as prod_logic
+from identifiers import logic as id_logic
 
 
 @staff_member_required
@@ -79,6 +80,15 @@ def article(request, article_id):
                     messages.add_message(request, messages.SUCCESS, '%s added to the article' % new_author.full_name())
 
                     return redirect(reverse('bc_article', kwargs={'article_id': article_id}))
+
+        if 'publish' in request.POST:
+            if not article.stage == models.STAGE_PUBLISHED:
+                id_logic.generate_crossref_doi_with_pattern(article)
+                article.stage = models.STAGE_PUBLISHED
+                article.snapshot_authors(article)
+                article.save()
+
+            return redirect(reverse('core_manager_index'))
 
     template = 'back_content/article.html'
     context = {

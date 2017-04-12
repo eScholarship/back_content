@@ -221,9 +221,23 @@
                             </div>
                             <div class="large-12 columns">
                                 <button class="success button pull-right" type="submit" name="save_section_3"><i
-                                                    class="fa fa-check">&nbsp;</i>{% trans "Save Section 3" %}</button>
+                                                    class="fa fa-check">&nbsp;</i>{% trans "Save Section 4" %}</button>
                             </div>
                         </form>
+                    </div>
+                    <div class="title-area">
+                        <h2>5. Publish</h2>
+                    </div>
+                    <div class="content">
+                        <p>When you are ready to publish your article, press the publish button and it will be published.</p>
+                        <div class="large-12 columns">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <button class="success button pull-right" type="submit" name="publish">
+                                    <i class="fa fa-check-circle">&nbsp;</i>Publish
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
