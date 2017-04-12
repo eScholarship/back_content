@@ -3,57 +3,146 @@
 {% load static from staticfiles %}
 {% load i18n %}
 
-{% block title %}Supporters{% endblock %}
+{% block title %}Back Content Submission{% endblock %}
 
 {% block body %}
     <section class="content">
         <div class="row expanded">
             <div class="large-12 columns box">
                 <div class="title-area">
-                    <h2>Add A New Article</h2>
+                    <h2>1. Add A New Article</h2>
                     <a href="#" class="button"><i class="fa fa-upload">&nbsp;</i>Submit JATS XML for Import</a>
                 </div>
                 <div class="content">
-                    <div class="large-6 columns">
-                    <label for="id_title">{% trans "Title" %}</label>
-                    {{ article_form.title }}
-                    {{ article_form.title.errors }}
-                </div>
-                <div class="large-6 columns">
-                    <label for="id_subtitle">{% trans "Subtitle" %}</label>
-                    {{ article_form.subtitle }}
-                    {{ article_form.subtitle.errors }}
-                </div>
-                <div class="large-12 columns">
-                    <label for="id_abstract">{% trans "Abstract" %}{% if form.abstract.field.required %}*{% endif %}</label>
-                    {{ article_form.abstract }}
-                    {{ article_form.abstract.errors }}
-                </div>
-                <div class="large-4 columns">
-                    <label for="id_language">{% trans "Language" %}</label>
-                    {{ article_form.language }}
-                    {{ article_form.language.errors }}
-                </div>
-                <div class="large-4 columns">
-                    <label for="id_section">{% trans "Section" %}</label>
-                    {{ article_form.section }}
-                    {{ article_form.section.errors }}
-                </div>
-                <div class="large-4 columns error">
-                    <label for="id_license">{% if article_form.license.errors %}<span style="color: red;">{% endif %}{% trans "License" %}{% if article_form.license.errors %}</span>{% endif %}{% if article_form.license.field.required %}*{% endif %}</label>
-                    {{ article_form.license }}
-                    {{ article_form.license.errors }}
-                </div>
-                <div class="large-12 columns">
-                    <label for="id_keywords">Keywords</label>
-                    <input type="text" id="id_keywords" name="keywords" value="{% if article_form.cleaned_data.keywords %}{{ article_form.cleaned_data.keywords }}{% else %}{% for keyword in article.keywords.all %}{{ keyword.word }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}"/> Hit Enter to add a new keyword.
-                </div>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="large-6 columns">
+                            <label for="id_title">{% trans "Title" %}</label>
+                            {{ article_form.title }}
+                            {{ article_form.title.errors }}
+                        </div>
+                        <div class="large-6 columns">
+                            <label for="id_subtitle">{% trans "Subtitle" %}</label>
+                            {{ article_form.subtitle }}
+                            {{ article_form.subtitle.errors }}
+                        </div>
+                        <div class="large-12 columns">
+                            <label for="id_abstract">
+                                {% trans "Abstract" %}{% if form.abstract.field.required %}*{% endif %}</label>
+                            {{ article_form.abstract }}
+                            {{ article_form.abstract.errors }}
+                        </div>
+                        <div class="large-4 columns">
+                            <label for="id_language">{% trans "Language" %}</label>
+                            {{ article_form.language }}
+                            {{ article_form.language.errors }}
+                        </div>
+                        <div class="large-4 columns">
+                            <label for="id_section">{% trans "Section" %}</label>
+                            {{ article_form.section }}
+                            {{ article_form.section.errors }}
+                        </div>
+                        <div class="large-4 columns error">
+                            <label for="id_license">{% if article_form.license.errors %}
+                                <span style="color: red;">{% endif %}{% trans "License" %}
+                                {% if article_form.license.errors %}</span>{% endif %}
+                                {% if article_form.license.field.required %}*{% endif %}</label>
+                            {{ article_form.license }}
+                            {{ article_form.license.errors }}
+                        </div>
+                        <div class="large-12 columns">
+                            <label for="id_keywords">Keywords</label>
+                            <input type="text" id="id_keywords" name="keywords" value="{% if article_form.cleaned_data.keywords %}{{ article_form.cleaned_data.keywords }}{% else %}{% for keyword in article.keywords.all %}{{ keyword.word }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}"/>
+                            Hit Enter to add a new keyword.
+                        </div>
 
-                <div class="large-12 columns">
-                    <button class="success button pull-right" type="submit" name="start_submission"><i
-                            class="fa fa-check">&nbsp;</i>{% trans "Save and Continue" %}
-                    </button>
+                        <div class="large-12 columns">
+                            <button class="success button pull-right" type="submit" name="save_section_1"><i
+                                    class="fa fa-check">&nbsp;</i>{% trans "Save Section 1" %}
+                            </button>
+                        </div>
+                    </form>
                 </div>
+                <div class="title-area">
+                    <h2>2. Article Authors</h2>
+                </div>
+                <div class="content" data-equalizer data-equalize-on="medium">
+                    <div class="large-7 columns" data-equalizer-watch>
+                        <p>{% trans "If you cannot find the author record by searching, and you are not the only author, you can add one by clicking the button below. This will open a popup modal for you to complete their details." %}</p>
+                        <a href="#" data-open="author" class="small success button">{% trans "Add New Author" %}</a>
+                        {% include "elements/submit/author.html" %}
+                    </div>
+                    <div class="large-5 columns" data-equalizer-watch>
+                        <h4>{% trans "Current Authors" %}</h4>
+                        <div class="row">
+                            <div class="large-12 columns">
+                                <table>
+                                    <tr>
+                                        <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Email" %}</th>
+                                        <th></th>
+                                    </tr>
+                                    {% for author in article.authors.all %}
+                                        <tr>
+                                            <td>{{ author.full_name }}</td>
+                                            <td>{{ author.email }}</td>
+                                            <td><a href="{% url 'delete_author' article.pk author.pk %}"><i
+                                                    class="fa fa-trash">
+                                                &nbsp;</i></a></td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="3">{% trans "No authors yet, add one!" %}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                                <hr/>
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <p>{% trans "You are required to select a main author, this author will receive the communications regarding your articles process through our systems. This does not have to be you." %}</p>
+                                    <label for="main-author">{% trans "Select main author" %}:</label>
+                                    <select class="form-control" id="main-author" name="main-author">
+                                        <option value="None">---------</option>
+                                        {% for author in article.authors.all %}
+                                            <option value="{{ author.pk }}"
+                                                    {% if article.correspondence_author.pk == author.pk %}selected{% endif %}>{{ author.full_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <br/>
+                                    <button class="success button pull-right" type="submit" name="save_section_2"><i
+                                            class="fa fa-check">&nbsp;</i>{% trans "Save Section 2" %}</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="title-area">
+                    <h2>3. Publication Info</h2>
+                </div>
+                <div class="content">
+                    <form method="POST">
+                        {% csrf_token %}
+                         <div class="large-6 columns">
+                            {{ pub_form.date_published|foundation }}
+                        </div>
+                        <div class="large-6 columns">
+                            {{ pub_form.date_accepted|foundation }}
+                        </div>
+                        <div class="large-4 columns">
+                            {{ pub_form.primary_issue|foundation }}
+                        </div>
+                        <div class="large-4 columns">
+                            {{ pub_form.page_numbers|foundation }}
+                        </div>
+                        <div class="large-4 columns">
+                            <br />
+                            {{ pub_form.peer_reviewed|foundation }}
+                        </div>
+                        <div class="large-12 columns">
+                            <button class="success button pull-right" type="submit" name="save_section_3"><i
+                                                class="fa fa-check">&nbsp;</i>{% trans "Save Section 3" %}</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -61,14 +150,18 @@
 {% endblock %}
 
 {% block js %}
-<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
-<script type="text/javascript" src="{% static "dist/js/jq-ui.min.js" %}"></script>
-<script src="{% static "dist/js/admin/tagit.js" %}"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+    <script type="text/javascript" src="{% static "dist/js/jq-ui.min.js" %}"></script>
+    <script src="{% static "dist/js/admin/tagit.js" %}"></script>
 
-<script type="text/javascript">
-  $(document).ready(function() {
-      $("#id_keywords").tagit(
-        {allowSpaces: true});
-  });
-</script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#id_keywords").tagit(
+                {allowSpaces: true});
+        });
+    </script>
+    {% if modal %}
+        {% include "elements/open_modal.html" with target=modal %}
+    {% endif %}
+    {% include "shared/datepicker.html" with target=".datepicker" %}
 {% endblock %}
