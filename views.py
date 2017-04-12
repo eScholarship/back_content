@@ -122,7 +122,5 @@ def xml_import_upload(request):
 def xml_import_parse(request, filename):
     path = files.get_temp_file_path_from_name(filename)
 
-    article = logic.import_from_jats_xml(path)
-    from django.http import HttpResponse
-    return HttpResponse('Stop erroring.')
-    #return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+    article = logic.import_from_jats_xml(path, request.journal)
+    return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
