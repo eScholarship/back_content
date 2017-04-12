@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.contrib import messages
 
 from submission import models, forms, logic
-from core import models as core_models
+from core import models as core_models, files
 from plugins.back_content import forms as bc_forms
 from production import logic as prod_logic
 from identifiers import logic as id_logic
@@ -106,8 +106,23 @@ def article(request, article_id):
 
 
 @staff_member_required
-def xml_import(request):
+def xml_import_upload(request):
+    if request.POST and request.FILES:
+        xml_file = request.FILES.get('xml_file')
+        filename, path = files.save_file_to_temp(xml_file)
+        return redirect(reverse('bc_xml_import_parse', kwargs={'filename': filename}))
+
     template = 'back_content/xml_import.html'
     context = {}
 
     return render(request, template, context)
+
+
+@staff_member_required
+def xml_import_parse(request, filename):
+    path = files.get_temp_file_path_from_name(filename)
+
+    article = logic.import_from_jats_xml(path)
+    from django.http import HttpResponse
+    return HttpResponse('Stop erroring.')
+    #return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
