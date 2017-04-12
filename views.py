@@ -46,6 +46,8 @@ def article(request, article_id):
 
             if pub_form.is_valid():
                 pub_form.save()
+                if article.primary_issue:
+                    article.primary_issue.articles.add(article)
                 return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
         if 'xml' in request.POST:
