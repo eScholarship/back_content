@@ -8,15 +8,21 @@ from core import models as core_models, files
 from plugins.back_content import forms as bc_forms
 from production import logic as prod_logic
 from identifiers import logic as id_logic
+from security.decorators import editor_user_required
 
 
-@staff_member_required
+@editor_user_required
 def index(request):
-    article = models.Article.objects.create(journal=request.journal)
+    if request.POST:
+        article = models.Article.objects.create(journal=request.journal)
+        return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
-    return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+    template = 'back_content/new_article.html'
+    context = {}
 
-@staff_member_required
+    return render(request, template, context)
+
+@editor_user_required
 def article(request, article_id):
     article = get_object_or_404(models.Article, pk=article_id, journal=request.journal)
     article_form = forms.ArticleInfo(instance=article)
@@ -90,7 +96,7 @@ def article(request, article_id):
                 article.snapshot_authors(article)
                 article.save()
 
-            return redirect(reverse('core_manager_index'))
+            return redirect(reverse('bc_index'))
 
     template = 'back_content/article.html'
     context = {
@@ -105,7 +111,7 @@ def article(request, article_id):
     return render(request, template, context)
 
 
-@staff_member_required
+@editor_user_required
 def xml_import_upload(request):
     if request.POST and request.FILES:
         xml_file = request.FILES.get('xml_file')
@@ -118,7 +124,7 @@ def xml_import_upload(request):
     return render(request, template, context)
 
 
-@staff_member_required
+@editor_user_required
 def xml_import_parse(request, filename):
     path = files.get_temp_file_path_from_name(filename)
 
