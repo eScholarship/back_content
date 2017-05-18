@@ -3,6 +3,7 @@ DESCRIPTION = 'This plugin supports the loading of back content via form or JATS
 AUTHOR = 'Andy Byers'
 VERSION = '1.0'
 SHORT_NAME = 'back_content'
+MANAGER_URL = 'bc_index'
 
 from utils import models
 
