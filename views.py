@@ -9,6 +9,7 @@ from plugins.back_content import forms as bc_forms
 from production import logic as prod_logic
 from identifiers import logic as id_logic
 from security.decorators import editor_user_required
+from utils import shared
 
 
 @editor_user_required
@@ -76,12 +77,12 @@ def article(request, article_id):
             if author_exists:
                 article.authors.add(author_exists)
                 messages.add_message(request, messages.SUCCESS, '%s added to the article' % author_exists.full_name())
-                return redirect(reverse('submit_authors', kwargs={'article_id': article_id}))
+                return redirect(reverse('bc_article', kwargs={'article_id': article_id}))
             else:
                 if form.is_valid():
                     new_author = form.save(commit=False)
                     new_author.username = new_author.email
-                    new_author.set_password(logic.generate_password())
+                    new_author.set_password(shared.generate_password())
                     new_author.save()
                     new_author.add_account_role(role_slug='author', journal=request.journal)
                     article.authors.add(new_author)
