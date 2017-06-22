@@ -70,7 +70,7 @@ def article(request, article_id):
                 prod_logic.save_galley(article, request, uploaded_file, True, "Other", True)
 
         if 'add_author' in request.POST:
-            form = forms.AuthorForm(request.POST)
+            author_form = forms.AuthorForm(request.POST)
             modal = 'author'
 
             author_exists = logic.check_author_exists(request.POST.get('email'))
@@ -79,8 +79,8 @@ def article(request, article_id):
                 messages.add_message(request, messages.SUCCESS, '%s added to the article' % author_exists.full_name())
                 return redirect(reverse('bc_article', kwargs={'article_id': article_id}))
             else:
-                if form.is_valid():
-                    new_author = form.save(commit=False)
+                if author_form.is_valid():
+                    new_author = author_form.save(commit=False)
                     new_author.username = new_author.email
                     new_author.set_password(shared.generate_password())
                     new_author.save()
