@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.admin.views.decorators import staff_member_required
 from django.core.urlresolvers import reverse
 from django.contrib import messages
+from django.utils import timezone
 
 from submission import models, forms, logic
 from core import models as core_models, files
@@ -15,7 +15,7 @@ from utils import shared
 @editor_user_required
 def index(request):
     if request.POST:
-        article = models.Article.objects.create(journal=request.journal)
+        article = models.Article.objects.create(journal=request.journal, date_accepted=timezone.now())
         return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
     template = 'back_content/new_article.html'
