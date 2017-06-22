@@ -104,8 +104,8 @@
                                     {% csrf_token %}
                                     <p>{% trans "You are required to select a main author, this author will receive the communications regarding your articles process through our systems. This does not have to be you." %}</p>
                                     <label for="main-author">{% trans "Select main author" %}:</label>
-                                    <select class="form-control" id="main-author" name="main-author">
-                                        <option value="None">---------</option>
+                                    <select class="form-control" id="main-author" name="main-author" required>
+                                        <option value="">---------</option>
                                         {% for author in article.authors.all %}
                                             <option value="{{ author.pk }}"
                                                     {% if article.correspondence_author.pk == author.pk %}selected{% endif %}>{{ author.full_name }}</option>
@@ -249,8 +249,8 @@
 
 {% block js %}
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
-    <script type="text/javascript" src="{% static "dist/js/jq-ui.min.js" %}"></script>
-    <script src="{% static "dist/js/admin/tagit.js" %}"></script>
+    <script type="text/javascript" src="{% static "common/js/jq-ui.min.js" %}"></script>
+    <script src="{% static "common/js/tagit.js" %}"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
@@ -261,5 +261,5 @@
     {% if modal %}
         {% include "elements/open_modal.html" with target=modal %}
     {% endif %}
-    {% include "shared/datepicker.html" with target=".datepicker" %}
+    {% include "elements/datepicker.html" with target=".datepicker" %}
 {% endblock %}
