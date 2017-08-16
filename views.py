@@ -15,13 +15,20 @@ from utils import shared
 @editor_user_required
 def index(request):
     if request.POST:
-        article = models.Article.objects.create(journal=request.journal, date_accepted=timezone.now())
+        article = models.Article.objects.create(journal=request.journal,
+                                                date_accepted=timezone.now(),
+                                                is_import=True)
         return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
+    articles = models.Article.objects.filter(journal=request.journal)
+
     template = 'back_content/new_article.html'
-    context = {}
+    context = {
+        'articles': articles,
+    }
 
     return render(request, template, context)
+
 
 @editor_user_required
 def article(request, article_id):
@@ -29,6 +36,7 @@ def article(request, article_id):
     article_form = forms.ArticleInfo(instance=article)
     author_form = forms.AuthorForm()
     pub_form = bc_forms.PublicationInfo(instance=article)
+    remote_form = bc_forms.RemoteArticle(instance=article)
     modal = None
 
     if request.POST:
@@ -48,13 +56,20 @@ def article(request, article_id):
                 article.save()
                 return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
-        if 'save_section_3' in request.POST:
+        if 'save_section_4' in request.POST:
             pub_form = bc_forms.PublicationInfo(request.POST, instance=article)
 
             if pub_form.is_valid():
                 pub_form.save()
                 if article.primary_issue:
                     article.primary_issue.articles.add(article)
+                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+
+        if 'save_section_5' in request.POST:
+            remote_form = bc_forms.RemoteArticle(request.POST, instance=article)
+
+            if remote_form.is_valid():
+                remote_form.save()
                 return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
         if 'xml' in request.POST:
@@ -106,6 +121,7 @@ def article(request, article_id):
         'form': author_form,
         'pub_form': pub_form,
         'galleys': prod_logic.get_all_galleys(article),
+        'remote_form': remote_form,
         'modal': modal
     }
 

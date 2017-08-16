@@ -17,3 +17,9 @@ class PublicationInfo(forms.ModelForm):
             self.fields['render_galley'].queryset = article.galley_set.all()
             self.fields['date_accepted'].widget.attrs['class'] = 'datepicker'
             self.fields['date_published'].widget.attrs['class'] = 'datepicker'
+
+
+class RemoteArticle(forms.ModelForm):
+    class Meta:
+        model = models.Article
+        fields = ('is_remote', 'remote_url')

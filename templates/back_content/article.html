@@ -221,13 +221,34 @@
                                 {{ pub_form.peer_reviewed|foundation }}
                             </div>
                             <div class="large-12 columns">
-                                <button class="success button pull-right" type="submit" name="save_section_3"><i
+                                <button class="success button pull-right" type="submit" name="save_section_4"><i
                                                     class="fa fa-check">&nbsp;</i>{% trans "Save Section 4" %}</button>
                             </div>
                         </form>
                     </div>
                     <div class="title-area">
-                        <h2>5. Publish</h2>
+                        <h2>5. Remote</h2>
+                    </div>
+                    <div class="content">
+                        <p>If your article is remote, you can fill the required details here. Remote articles require a DOI for resolution.</p>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="row expanded">
+                                <div class="large-6 columns">
+                                    {{ remote_form.is_remote|foundation }}
+                                </div>
+                                <div class="large-6 columns">
+                                    {{ remote_form.remote_url|foundation }}
+                                </div>
+                                <div class="large-12 columns">
+                                    <button class="success button pull-right" type="submit" name="save_section_5"><i
+                                                        class="fa fa-check">&nbsp;</i>{% trans "Save Section 5" %}</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="title-area">
+                        <h2>6. Publish</h2>
                     </div>
                     <div class="content">
                         <p>When you are ready to publish your article, press the publish button and it will be published.</p>
