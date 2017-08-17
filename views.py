@@ -1,3 +1,5 @@
+import requests
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
@@ -5,7 +7,7 @@ from django.utils import timezone
 
 from submission import models, forms, logic
 from core import models as core_models, files
-from plugins.back_content import forms as bc_forms
+from plugins.back_content import forms as bc_forms, logic as bc_logic
 from production import logic as prod_logic
 from identifiers import logic as id_logic
 from security.decorators import editor_user_required
@@ -147,3 +149,32 @@ def xml_import_parse(request, filename):
 
     article = logic.import_from_jats_xml(path, request.journal)
     return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+
+
+@editor_user_required
+def doi_import(request):
+    form = bc_forms.RemoteParse()
+
+    if request.POST:
+        form = bc_forms.RemoteParse(request.POST)
+        if form.is_valid():
+            print(form.cleaned_data)
+            url = form.cleaned_data['url']
+            mode = form.cleaned_data['mode']
+
+            if mode == 'doi':
+                article = bc_logic.get_and_parse_doi_metadata(url, request)
+                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+            else:
+                r = requests.get(url)
+                article = bc_logic.parse_url_results(r, request)
+                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+
+    template = 'back_content/doi_import.html'
+    context = {
+        'form': form,
+    }
+
+    return render(request, template, context)
+
+

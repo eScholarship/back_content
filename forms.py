@@ -1,7 +1,6 @@
 from django import forms
 
 from submission import models
-from production import logic
 
 
 class PublicationInfo(forms.ModelForm):
@@ -23,3 +22,8 @@ class RemoteArticle(forms.ModelForm):
     class Meta:
         model = models.Article
         fields = ('is_remote', 'remote_url')
+
+
+class RemoteParse(forms.Form):
+    url = forms.CharField(required=True, label="Enter a URL or a DOI.")
+    mode = forms.ChoiceField(required=True, choices=(('url', 'URL'), ('doi', 'DOI')))

@@ -8,4 +8,6 @@ urlpatterns = [
 
     url(r'^xml_import/$', views.xml_import_upload, name='bc_xml_import_upload'),
     url(r'^xml_import/(?P<filename>[\w.-]{0,256})$', views.xml_import_parse, name='bc_xml_import_parse'),
+
+    url(r'^doi_import/$', views.doi_import, name='bc_doi_import'),
 ]
