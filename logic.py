@@ -1,10 +1,12 @@
 import datetime
+import uuid
 from bs4 import BeautifulSoup
 
 from django.contrib import messages
 
 from submission import models
 from identifiers import models as ident_models
+from core import models as core_models
 
 
 def parse_url_results(r, request):
@@ -69,6 +71,15 @@ def get_and_parse_doi_metadata(r, request, doi):
 
         id_message = 'Identifier {0} created.'.format(identifier)
         messages.add_message(request, messages.SUCCESS, id_message)
+
+    for author in message.get('author', None):
+        new_author = core_models.Account.objects.create(
+            email="{0}@journal.com".format(uuid.uuid4()),
+            first_name=author.get('given', ''),
+            last_name=author.get('family', ''),
+            institution=author['affiliation'][0].get('name', '')
+        )
+        article.authors.add(new_author)
 
     messages.add_message(request, messages.SUCCESS, 'Article created.')
     return article
