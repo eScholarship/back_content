@@ -1,3 +1,4 @@
+import datetime
 from bs4 import BeautifulSoup
 
 from django.contrib import messages
@@ -40,5 +41,34 @@ def parse_url_results(r, request):
     return article
 
 
-def get_and_parse_doi_metadata(url, request):
-    crossref_quert = request.get
+def get_and_parse_doi_metadata(r, request, doi):
+    message = r.get('message')
+
+    title = message.get('title', '')[0]
+    date_parts = message.get('published-online').get("date-parts")[0]
+    pub_date = datetime.datetime(year=date_parts[0], month=date_parts[1], day=date_parts[2])
+    doi = doi
+    abstract = message.get('abstract', '')
+
+    article = models.Article.objects.create(
+        title=title,
+        date_published=pub_date,
+        abstract=abstract,
+        is_remote=True,
+        remote_url='https://doi.org/{0}'.format(doi),
+        journal=request.journal
+    )
+
+    if doi:
+        identifier = ident_models.Identifier.objects.create(
+            id_type='doi',
+            identifier=doi,
+            enabled=True,
+            article=article
+        )
+
+        id_message = 'Identifier {0} created.'.format(identifier)
+        messages.add_message(request, messages.SUCCESS, id_message)
+
+    messages.add_message(request, messages.SUCCESS, 'Article created.')
+    return article

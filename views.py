@@ -163,7 +163,8 @@ def doi_import(request):
             mode = form.cleaned_data['mode']
 
             if mode == 'doi':
-                article = bc_logic.get_and_parse_doi_metadata(url, request)
+                r = requests.get('https://api.crossref.org/v1/works/{0}'.format(url)).json()
+                article = bc_logic.get_and_parse_doi_metadata(r, request, doi=url)
                 return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
             else:
                 r = requests.get(url)

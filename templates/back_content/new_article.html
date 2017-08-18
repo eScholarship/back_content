@@ -20,6 +20,8 @@
                         {% csrf_token %}
                         <button type="submit" class="success button"><i class="fa fa-upload">&nbsp;</i>Start Submission
                         </button>
+                        <a href="{% url 'bc_xml_import_upload' %}" class="success button"><i class="fa fa-upload">&nbsp;</i>Submit JATS XML for Import</a>
+                        <a href="{% url 'bc_doi_import' %}" class="success button"><i class="fa fa-upload">&nbsp;</i>Import Metadata from DOI or URL</a>
                     </form>
                 </div>
                 <div class="title-area">
