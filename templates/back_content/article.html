@@ -147,7 +147,7 @@
                             {% can_view_file_history galley.file article as can_view_file_history_flag %}
                             <tr>
                                 <td>{{ galley.label }}</td>
-                                <td>{{ galley.file.original_filename|truncatechars:40 }} {% if galley.file.mime_type == 'application/xml' %}&nbsp;<small><a href="{% url 'bc_preview_xml_galley' article.pk galley.pk %}"><i class="fa fa-search" aria-hidden="true">&nbsp;</i>Preview</a></small>{% endif %}</td>
+                                <td>{{ galley.file.original_filename|truncatechars:40 }} {% if galley.label == 'XML'  %}&nbsp;<small><a href="{% url 'bc_preview_xml_galley' article.pk galley.pk %}"><i class="fa fa-search" aria-hidden="true">&nbsp;</i>Preview</a></small>{% endif %}</td>
                                 <td>Galley</td>
                                 <td><a href="{% url 'pm_edit_galley' article.pk galley.pk %}" class="fa fa-edit"></a></td>
                                 <td>{% if can_view_file_flag %}

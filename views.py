@@ -192,7 +192,7 @@ def preview_xml_galley(request, article_id, galley_id):
     """
 
     article = get_object_or_404(models.Article, journal=request.journal, pk=article_id)
-    galley = core_models.Galley.objects.filter(article=article, file__mime_type='application/xml', pk=galley_id)
+    galley = core_models.Galley.objects.filter(article=article, file__mime_type__contains='/xml', pk=galley_id)
 
     if not galley:
         raise Http404
