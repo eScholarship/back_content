@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.utils import timezone
+from django.http import Http404
 
 from submission import models, forms, logic
 from core import models as core_models, files
@@ -12,6 +13,7 @@ from production import logic as prod_logic
 from identifiers import logic as id_logic
 from security.decorators import editor_user_required
 from utils import shared
+from journal import logic as journal_logic
 
 
 @editor_user_required
@@ -179,3 +181,29 @@ def doi_import(request):
     return render(request, template, context)
 
 
+@editor_user_required
+def preview_xml_galley(request, article_id, galley_id):
+    """
+    Allows an editor to preview an article's XML galleys.
+    :param request: HttpRequest
+    :param article_id: Article object ID (INT)
+    :param galley_id: Galley object ID (INT)
+    :return: HttpResponse
+    """
+
+    article = get_object_or_404(models.Article, journal=request.journal, pk=article_id)
+    galley = core_models.Galley.objects.filter(article=article, file__mime_type='application/xml', pk=galley_id)
+
+    if not galley:
+        raise Http404
+
+    content = journal_logic.list_galleys(article, galley)
+
+    template = 'back_content/preview_xml_galley.html'
+    context = {
+        'article': article,
+        'galley': galley,
+        'file_content': content,
+    }
+
+    return render(request, template, context)

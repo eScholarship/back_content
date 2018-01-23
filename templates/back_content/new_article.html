@@ -7,6 +7,11 @@
 
 {% block title %}Back Content Submission{% endblock %}
 
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="{% url 'bc_index' %}">Back Content Plugin</a></li>
+{% endblock breadcrumbs %}
+
 {% block body %}
     <section class="content">
         <div class="row expanded">

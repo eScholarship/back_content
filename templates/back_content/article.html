@@ -7,6 +7,13 @@
 
 {% block title %}Back Content Submission{% endblock %}
 
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="{% url 'bc_index' %}">Back Content Plugin</a></li>
+    <li>{% if article.title %}{{ article.title }}{% else %}New Article{% endif %}</li>
+{% endblock breadcrumbs %}
+
 {% block body %}
     <section class="content">
         <div class="row expanded">
@@ -72,7 +79,7 @@
                         <p>{% trans "You can add an author by clicking the button below. This will open a popup modal for you to complete their details." %}</p>
                         <p>{% trans "If you know of an existing author, complete only the email field and they will be added as an author." %}</p>
                         <a href="#" data-open="author" class="small success button">{% trans "Add New Author" %}</a>
-                        {% include "elements/submit/author.html" %}
+                        {% include "admin/elements/submit/author.html" %}
                     </div>
                     <div class="large-5 columns" data-equalizer-watch>
                         <h4>{% trans "Current Authors" %}</h4>
@@ -140,7 +147,7 @@
                             {% can_view_file_history galley.file article as can_view_file_history_flag %}
                             <tr>
                                 <td>{{ galley.label }}</td>
-                                <td>{{ galley.file.original_filename|truncatechars:40 }}</td>
+                                <td>{{ galley.file.original_filename|truncatechars:40 }} {% if galley.file.mime_type == 'application/xml' %}&nbsp;<small><a href="{% url 'bc_preview_xml_galley' article.pk galley.pk %}"><i class="fa fa-search" aria-hidden="true">&nbsp;</i>Preview</a></small>{% endif %}</td>
                                 <td>Galley</td>
                                 <td><a href="{% url 'pm_edit_galley' article.pk galley.pk %}" class="fa fa-edit"></a></td>
                                 <td>{% if can_view_file_flag %}
