@@ -60,7 +60,8 @@
                         </div>
                         <div class="large-12 columns">
                             <label for="id_keywords">Keywords</label>
-                            <input type="text" id="id_keywords" name="keywords" value="{% if article_form.cleaned_data.keywords %}{{ article_form.cleaned_data.keywords }}{% else %}{% for keyword in article.keywords.all %}{{ keyword.word }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}"/>
+                            <input type="text" id="id_keywords" name="keywords" value="
+                                    {% if article_form.cleaned_data.keywords %}{{ article_form.cleaned_data.keywords }}{% else %}{% for keyword in article.keywords.all %}{{ keyword.word }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}"/>
                             Hit Enter to add a new keyword.
                         </div>
 
@@ -99,7 +100,7 @@
                                                     class="fa fa-trash">
                                                 &nbsp;</i></a></td>
                                         </tr>
-                                    {% empty %}
+                                        {% empty %}
                                         <tr>
                                             <td colspan="3">{% trans "No authors yet, add one!" %}</td>
                                         </tr>
@@ -147,9 +148,15 @@
                             {% can_view_file_history galley.file article as can_view_file_history_flag %}
                             <tr>
                                 <td>{{ galley.label }}</td>
-                                <td>{{ galley.file.original_filename|truncatechars:40 }} {% if galley.label == 'XML'  %}&nbsp;<small><a target="_blank" href="{% url 'bc_preview_xml_galley' article.pk galley.pk %}"><i class="fa fa-search" aria-hidden="true">&nbsp;</i>Preview</a></small>{% endif %}</td>
+                                <td>{{ galley.file.original_filename|truncatechars:40 }} {% if galley.label == 'XML' %}
+                                    &nbsp;
+                                    <small><a target="_blank"
+                                              href="{% url 'bc_preview_xml_galley' article.pk galley.pk %}"><i
+                                            class="fa fa-search" aria-hidden="true">&nbsp;</i>Preview</a>
+                                    </small>{% endif %}</td>
                                 <td>Galley</td>
-                                <td><a href="{% url 'pm_edit_galley' article.pk galley.pk %}" class="fa fa-edit"></a></td>
+                                <td><a href="{% url 'pm_edit_galley' article.pk galley.pk %}" class="fa fa-edit"></a>
+                                </td>
                                 <td>{% if can_view_file_flag %}
                                     <a href="{% url 'article_file_download' 'id' article.pk galley.file.pk %}"><i
                                             class="fa fa-download">&nbsp;</i></a>{% endif %}
@@ -174,7 +181,8 @@
                                         <p><span data-tooltip aria-haspopup="true" class="has-tip top"
                                                  data-disable-hover="false"
                                                  tabindex="2"
-                                                 title="{% has_missing_supplements galley %}">Missing Supplements</span></p>
+                                                 title="{% has_missing_supplements galley %}">Missing Supplements</span>
+                                        </p>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -188,26 +196,27 @@
                                         <p><span data-tooltip aria-haspopup="true" class="has-tip top"
                                                  data-disable-hover="false"
                                                  tabindex="2"
-                                                 title="{% has_missing_supplements galley %}">Missing Supplements</span></p>
+                                                 title="{% has_missing_supplements galley %}">Missing Supplements</span>
+                                        </p>
                                     {% endif %}
                                 </td>
                             </tr>
-                        {% empty %}
+                            {% empty %}
                             <tr>
                                 <td colspan="9">No galleys have been uploaded.</td>
                             </tr>
                         {% endfor %}
                     </table>
-                    <div class="float-right"><a class="button success" data-open="uploadbox"><i class="fa fa-cloud-upload">
+                    <a class="button success float-right" data-open="uploadbox"><i class="fa fa-cloud-upload">
                         &nbsp;</i>Upload a new galley</a>
-                    </div>
+
                     <div class="title-area">
                         <h2>4. Publication Info</h2>
                     </div>
                     <div class="content">
                         <form method="POST">
                             {% csrf_token %}
-                             <div class="large-4 columns">
+                            <div class="large-4 columns">
                                 {{ pub_form.date_published|foundation }}
                             </div>
                             <div class="large-4 columns">
@@ -223,12 +232,17 @@
                                 {{ pub_form.page_numbers|foundation }}
                             </div>
                             <div class="large-4 columns">
-                                <br />
+                                <br/>
                                 {{ pub_form.peer_reviewed|foundation }}
                             </div>
                             <div class="large-12 columns">
+                                {% if article and article.date_published %}
+                                <p>More Pub Info is available on the <a href="{% url 'publish_article' article.pk %}">Pre Publication Checklist</a>.</p>
+                                {% endif %}
+                            </div>
+                            <div class="large-12 columns">
                                 <button class="success button pull-right" type="submit" name="save_section_4"><i
-                                                    class="fa fa-check">&nbsp;</i>{% trans "Save Section 4" %}</button>
+                                        class="fa fa-check">&nbsp;</i>{% trans "Save Section 4" %}</button>
                             </div>
                         </form>
                     </div>
@@ -236,7 +250,8 @@
                         <h2>5. Remote</h2>
                     </div>
                     <div class="content">
-                        <p>If your article is remote, you can fill the required details here. If the remote article has a DOI, you should use it for full resolution. .</p>
+                        <p>If your article is remote, you can fill the required details here. If the remote article has
+                            a DOI, you should use it for full resolution. .</p>
                         <form method="POST">
                             {% csrf_token %}
                             <div class="row expanded">
@@ -248,7 +263,7 @@
                                 </div>
                                 <div class="large-12 columns">
                                     <button class="success button pull-right" type="submit" name="save_section_5"><i
-                                                        class="fa fa-check">&nbsp;</i>{% trans "Save Section 5" %}</button>
+                                            class="fa fa-check">&nbsp;</i>{% trans "Save Section 5" %}</button>
                                 </div>
                             </div>
                         </form>
@@ -257,7 +272,8 @@
                         <h2>6. Publish</h2>
                     </div>
                     <div class="content">
-                        <p>When you are ready to publish your article, press the publish button and it will be published.</p>
+                        <p>When you are ready to publish your article, press the publish button and it will be
+                            published.</p>
                         <div class="large-12 columns">
                             <form method="POST">
                                 {% csrf_token %}

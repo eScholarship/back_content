@@ -67,6 +67,10 @@ def article(request, article_id):
                 pub_form.save()
                 if article.primary_issue:
                     article.primary_issue.articles.add(article)
+
+                if article.date_published:
+                    article.stage = models.STAGE_READY_FOR_PUBLICATION
+                    article.save()
                 return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
         if 'save_section_5' in request.POST:
