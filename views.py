@@ -199,11 +199,11 @@ def preview_xml_galley(request, article_id, galley_id):
 
     content = journal_logic.list_galleys(article, galley)
 
-    template = 'back_content/preview_xml_galley.html'
+    template = 'journal/article.html'
     context = {
         'article': article,
-        'galley': galley,
-        'file_content': content,
+        'galleys': galley,
+        'article_content': content
     }
 
     return render(request, template, context)
