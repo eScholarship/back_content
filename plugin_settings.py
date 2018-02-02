@@ -4,9 +4,12 @@ AUTHOR = 'Andy Byers'
 VERSION = '1.0'
 SHORT_NAME = 'back_content'
 MANAGER_URL = 'bc_index'
+
+# Workflow Settings
 IS_WORKFLOW_PLUGIN = True
 HANDSHAKE_URL = 'bc_article'
 STAGE = 'Back Content'
+KANBAN_CARD = 'back_content/kanban_card.html'
 
 from utils import models
 

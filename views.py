@@ -8,12 +8,13 @@ from django.http import Http404
 
 from submission import models, forms, logic
 from core import models as core_models, files
-from plugins.back_content import forms as bc_forms, logic as bc_logic
+from plugins.back_content import forms as bc_forms, logic as bc_logic, plugin_settings
 from production import logic as prod_logic
 from identifiers import logic as id_logic
 from security.decorators import editor_user_required
 from utils import shared
 from journal import logic as journal_logic
+from events import logic as event_logic
 
 
 @editor_user_required
@@ -120,7 +121,16 @@ def article(request, article_id):
                 article.snapshot_authors(article)
                 article.save()
 
-            return redirect(reverse('bc_index'))
+            if plugin_settings.IS_WORKFLOW_PLUGIN:
+                workflow_kwargs = {'handshake_url': 'bc_article',
+                                   'request': request,
+                                   'article': article,
+                                   'switch_stage': True}
+                return event_logic.Events.raise_event(event_logic.Events.ON_WORKFLOW_ELEMENT_COMPLETE,
+                                                      task_object=article,
+                                                      **workflow_kwargs)
+            else:
+                return redirect(reverse('bc_index'))
 
     template = 'back_content/article.html'
     context = {
