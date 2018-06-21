@@ -6,9 +6,11 @@ SHORT_NAME = 'back_content'
 MANAGER_URL = 'bc_index'
 IS_WORKFLOW_PLUGIN = True
 HANDSHAKE_URL = 'bc_article'
+ARTICLE_PK_IN_HANDSHAKE_URL = True
 STAGE = 'Back Content'
 
 from utils import models
+
 
 def install():
     new_plugin, created = models.Plugin.objects.get_or_create(name=SHORT_NAME, version=VERSION, enabled=True)
