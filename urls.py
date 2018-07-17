@@ -19,4 +19,5 @@ urlpatterns = [
     url(r'^article/(?P<article_id>\d+)/galley/(?P<galley_id>\d+)/figures/(?P<file_name>.*)/$',
         article_figure,
         name='bc_article_figure'),
+    url(r'^article/(?P<article_id>\d+)/authors/(?P<author_id>\d+)/delete/$', views.delete_author, name='bc_delete_author'),
 ]
