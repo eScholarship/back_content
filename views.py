@@ -212,3 +212,15 @@ def preview_xml_galley(request, article_id, galley_id):
     }
 
     return render(request, template, context)
+
+@editor_user_required
+def delete_author(request, article_id, author_id):
+    """Allows submitter to delete an author object."""
+    article = get_object_or_404(models.Article, pk=article_id)
+    author = get_object_or_404(core_models.Account, pk=author_id)
+    article.authors.remove(author)
+
+    if article.correspondence_author == author:
+        article.correspondence_author = None
+
+    return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
