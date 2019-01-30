@@ -8,6 +8,7 @@ MANAGER_URL = 'bc_index'
 # Workflow Settings
 IS_WORKFLOW_PLUGIN = True
 HANDSHAKE_URL = 'bc_article'
+ARTICLE_PK_IN_HANDSHAKE_URL = True
 STAGE = 'Back Content'
 KANBAN_CARD = 'back_content/kanban_card.html'
 
