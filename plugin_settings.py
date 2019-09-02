@@ -4,6 +4,7 @@ AUTHOR = 'Andy Byers'
 VERSION = '1.0'
 SHORT_NAME = 'back_content'
 MANAGER_URL = 'bc_index'
+JANEWAY_VERSION = "1.3.6"
 
 # Workflow Settings
 IS_WORKFLOW_PLUGIN = True
