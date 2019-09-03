@@ -38,15 +38,16 @@ def index(request):
 @editor_user_required
 def article(request, article_id):
     article = get_object_or_404(models.Article, pk=article_id, journal=request.journal)
-    article_form = forms.ArticleInfo(instance=article)
+    article_form = bc_forms.ArticleInfo(instance=article)
     author_form = forms.AuthorForm()
     pub_form = bc_forms.PublicationInfo(instance=article)
     remote_form = bc_forms.RemoteArticle(instance=article)
+    existing_author_form = bc_forms.ExistingAuthor()
     modal = None
 
     if request.POST:
         if 'save_section_1' in request.POST:
-            article_form = forms.ArticleInfo(request.POST, instance=article)
+            article_form = bc_forms.ArticleInfo(request.POST, instance=article)
 
             if article_form.is_valid():
                 article_form.save()
@@ -114,6 +115,20 @@ def article(request, article_id):
                     save_to_disk=True,
                 )
 
+        if 'existing_author' in request.POST:
+            existing_author_form = bc_forms.ExistingAuthor(request.POST)
+            if existing_author_form.is_valid():
+                author = existing_author_form.cleaned_data.get('author')
+                article.authors.add(author)
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    'Author added to the article.',
+                )
+                return redirect(
+                    reverse('bc_article', kwargs={'article_id': article_id})
+                )
+
         if 'add_author' in request.POST:
             author_form = forms.AuthorForm(request.POST)
             modal = 'author'
@@ -161,6 +176,7 @@ def article(request, article_id):
         'pub_form': pub_form,
         'galleys': prod_logic.get_all_galleys(article),
         'remote_form': remote_form,
+        'existing_author_form': existing_author_form,
         'modal': modal
     }
 

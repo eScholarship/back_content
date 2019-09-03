@@ -77,10 +77,17 @@
                 </div>
                 <div class="content" data-equalizer data-equalize-on="medium">
                     <div class="large-7 columns" data-equalizer-watch>
-                        <p>{% trans "You can add an author by clicking the button below. This will open a popup modal for you to complete their details." %}</p>
-                        <p>{% trans "If you know of an existing author, complete only the email field and they will be added as an author." %}</p>
+                        <p>{% trans "You can add an author by clicking the button below. This will open a popup modal for you to complete their details. If you do not have a legitimate email address for this author use @journal.com as a prefix for their email address and Janeway will ignore it." %}</p>
                         <a href="#" data-open="author" class="small success button">{% trans "Add New Author" %}</a>
                         {% include "admin/elements/submit/author.html" %}
+                        <p>{% trans "If you know of an existing author, you can select them from the below drop down." %}</p>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <label for="id_section">{% trans "Existing Author" %}</label>
+                            {{ existing_author_form.author }}
+                            {{ existing_author_form.author.errors }}
+                            <button name="existing_author" class="success button">Add Existing Author</button>
+                        </form>
                     </div>
                     <div class="large-5 columns" data-equalizer-watch>
                         <h4>{% trans "Current Authors" %}</h4>
@@ -305,4 +312,23 @@
         {% include "elements/open_modal.html" with target=modal %}
     {% endif %}
     {% include "elements/datepicker.html" with target=".datepicker" %}
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css"
+          integrity="sha256-ibvTNlNAB4VMqE5uFlnBME6hlparj5sEr1ovZ3B/bNA="
+          crossorigin="anonymous"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js"
+            integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk="
+            crossorigin="anonymous"></script>
+
+    <script>
+        $('#id_author').selectize({
+            create: true,
+            sortField: 'text'
+        });
+    </script>
+    <style>
+        .help-text {
+            padding-top: 15px;
+        }
+    </style>
 {% endblock %}
