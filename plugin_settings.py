@@ -7,7 +7,7 @@ MANAGER_URL = 'bc_index'
 JANEWAY_VERSION = "1.3.6"
 
 # Workflow Settings
-IS_WORKFLOW_PLUGIN = True
+IS_WORKFLOW_PLUGIN = False
 HANDSHAKE_URL = 'bc_article'
 ARTICLE_PK_IN_HANDSHAKE_URL = True
 STAGE = 'Back Content'
