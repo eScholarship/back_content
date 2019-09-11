@@ -85,34 +85,25 @@ def article(request, article_id):
         if 'xml' in request.POST:
             for uploaded_file in request.FILES.getlist('xml-file'):
                 prod_logic.save_galley(
-                    article,
-                    request,
-                    uploaded_file,
-                    True,
-                    "XML",
-                    save_to_disk=True,
+                    article, request, uploaded_file,
+                    is_galley=True,
+                    label="XML",
                 )
 
         if 'pdf' in request.POST:
             for uploaded_file in request.FILES.getlist('pdf-file'):
                 prod_logic.save_galley(
-                    article,
-                    request,
-                    uploaded_file,
-                    True,
-                    "PDF",
-                    save_to_disk=True,
+                    article, request, uploaded_file,
+                    is_galley=True,
+                    label="PDF",
                 )
 
         if 'other' in request.POST:
             for uploaded_file in request.FILES.getlist('other-file'):
                 prod_logic.save_galley(
-                    article,
-                    request,
-                    uploaded_file,
-                    True,
-                    "Other",
-                    save_to_disk=True,
+                    article, request, uploaded_file,
+                    is_galley=True,
+                    label="Other",
                 )
 
         if 'existing_author' in request.POST:
