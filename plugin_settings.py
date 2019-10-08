@@ -1,7 +1,7 @@
 PLUGIN_NAME = 'Back Content Plugin'
 DESCRIPTION = 'This plugin supports the loading of back content via form or JATS XML.'
 AUTHOR = 'Andy Byers'
-VERSION = '1.1'
+VERSION = '1.2'
 SHORT_NAME = 'back_content'
 MANAGER_URL = 'bc_index'
 JANEWAY_VERSION = "1.3.6"
@@ -14,6 +14,7 @@ STAGE = 'Back Content'
 KANBAN_CARD = 'back_content/kanban_card.html'
 
 from utils import models
+
 
 def install():
     new_plugin, created = models.Plugin.objects.get_or_create(name=SHORT_NAME, version=VERSION, enabled=True)

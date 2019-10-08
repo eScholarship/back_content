@@ -239,7 +239,7 @@ def preview_xml_galley(request, article_id, galley_id):
     if not galley:
         raise Http404
 
-    content = journal_logic.list_galleys(article, galley)
+    content = journal_logic.get_galley_content(article, galley)
 
     template = 'journal/article.html'
     context = {
