@@ -17,7 +17,11 @@ from utils import models
 
 
 def install():
-    new_plugin, created = models.Plugin.objects.get_or_create(name=SHORT_NAME, version=VERSION, enabled=True)
+    defaults = {"version": VERSION, "enabled": True}
+    new_plugin, created = models.Plugin.objects.get_or_create(
+            name=SHORT_NAME,
+            defaults=defaults,
+    )
 
     if created:
         print('Plugin {0} installed.'.format(PLUGIN_NAME))
