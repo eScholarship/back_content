@@ -116,6 +116,10 @@ def article(request, article_id):
                     messages.SUCCESS,
                     'Author added to the article.',
                 )
+                models.ArticleAuthorOrder.objects.get_or_create(
+                    article=article,
+                    author=author,
+                )
                 return redirect(
                     reverse('bc_article', kwargs={'article_id': article_id})
                 )
@@ -124,22 +128,37 @@ def article(request, article_id):
             author_form = forms.AuthorForm(request.POST)
             modal = 'author'
 
-            author_exists = logic.check_author_exists(request.POST.get('email'))
-            if author_exists:
-                article.authors.add(author_exists)
-                messages.add_message(request, messages.SUCCESS, '%s added to the article' % author_exists.full_name())
-                return redirect(reverse('bc_article', kwargs={'article_id': article_id}))
+            author = logic.check_author_exists(request.POST.get('email'))
+            if author:
+                article.authors.add(author)
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    '%s added to the article' % author.full_name(),
+                )
             else:
                 if author_form.is_valid():
-                    new_author = author_form.save(commit=False)
-                    new_author.username = new_author.email
-                    new_author.set_password(shared.generate_password())
-                    new_author.save()
-                    new_author.add_account_role(role_slug='author', journal=request.journal)
-                    article.authors.add(new_author)
-                    messages.add_message(request, messages.SUCCESS, '%s added to the article' % new_author.full_name())
+                    author = author_form.save(commit=False)
+                    author.username = author.email
+                    author.set_password(shared.generate_password())
+                    author.save()
+                    author.add_account_role(
+                        role_slug='author',
+                        journal=request.journal,
+                    )
+                    article.authors.add(author)
+                    messages.add_message(
+                        request,
+                        messages.SUCCESS,
+                        '%s added to the article' % author.full_name(),
+                    )
 
-                    return redirect(reverse('bc_article', kwargs={'article_id': article_id}))
+            models.ArticleAuthorOrder.objects.get_or_create(
+                article=article,
+                author=author,
+            )
+
+            return redirect(reverse('bc_article', kwargs={'article_id': article_id}))
 
         if 'publish' in request.POST:
             if not article.stage == models.STAGE_PUBLISHED:

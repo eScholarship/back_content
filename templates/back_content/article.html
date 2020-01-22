@@ -93,17 +93,22 @@
                         <h4>{% trans "Current Authors" %}</h4>
                         <div class="row">
                             <div class="large-12 columns">
-                                <table>
+                                <table class="small scroll">
+                                    <thead>
                                     <tr>
+                                        <th></th>
                                         <th>{% trans "Name" %}</th>
                                         <th>{% trans "Email" %}</th>
                                         <th></th>
                                     </tr>
-                                    {% for author in article.authors.all %}
-                                        <tr>
-                                            <td>{{ author.full_name }}</td>
-                                            <td>{{ author.email }}</td>
-                                            <td><a href="{% url 'delete_author' article.pk author.pk %}"><i
+                                    </thead>
+                                    <tbody id="sortable">
+                                    {% for order in article.articleauthororder_set.all %}
+                                        <tr id="authors-{{ order.author.pk }}">
+                                            <td><i class="fa fa-sort"></i></td>
+                                            <td>{{ order.author.full_name }}</td>
+                                            <td>{{ order.author.email }}</td>
+                                            <td><a href="{% url 'delete_author' article.pk order.author.pk %}"><i
                                                     class="fa fa-trash">
                                                 &nbsp;</i></a></td>
                                         </tr>
@@ -290,6 +295,51 @@
                             </form>
                         </div>
                     </div>
+                    {% if article.date_published %}
+                    <div class="title-area">
+                        <h2>Frozen Authors</h2>
+                    </div>
+                    <div class="content">
+                        <p>When an article is published the author records are frozen. You can re-order them here.</p>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <table class="small scroll">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Institution</th>
+                                    <th>Correspondence Author</th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                                </thead>
+                                <tbody id="frozen_authors">
+                                {% for f_author in article.frozen_authors %}
+                                    <tr id="authors-{{ f_author.pk }}">
+                                        <td><i class="fa fa-sort"></i></td>
+                                        <td>{{ f_author.full_name }}</td>
+                                        <td>{{ f_author.author.email }}</td>
+                                        <td>{{ f_author.institution }}</td>
+                                        <td>{% if f_author.author == article.correspondence_author %}
+                                            <i class="fa fa-check"></i>{% else %}<i class="fa fa-times"></i>{% endif %}</td>
+                                        <td><a href="?author={{ f_author.pk }}&return={{ return }}"><i
+                                                class="fa fa-edit">&nbsp;</i>Edit</a></td>
+                                        <td>
+                                            <form method="POST">{% csrf_token %}
+                                                <button type="submit" name="delete" value="{{ f_author.pk }}"><i
+                                                        class="fa fa-trash">&nbsp;</i>Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </form>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -311,7 +361,9 @@
     {% if modal %}
         {% include "elements/open_modal.html" with target=modal %}
     {% endif %}
+
     {% include "elements/datepicker.html" with target=".datepicker" %}
+
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css"
           integrity="sha256-ibvTNlNAB4VMqE5uFlnBME6hlparj5sEr1ovZ3B/bNA="
@@ -331,4 +383,37 @@
             padding-top: 15px;
         }
     </style>
+    <script src="{% static "admin/js/csrf.js" %}"></script>
+    <link type='text/css' href="{% static "common/css/jq-ui.css" %}" rel="stylesheet">
+    <script type="text/javascript" src="{% static "common/js/jq-ui.min.js" %}"></script>
+    <script>
+        $("#sortable").sortable({
+            update: function (event, ui) {
+                var data = $(this).sortable('serialize');
+                console.log(data);
+                // POST to server using $.post or $.ajax
+                $.ajax({
+                    data: data,
+                    type: 'POST',
+                    url: '{% url 'submit_authors' article.pk %}'
+                });
+            }
+        });
+        $("#sortable").disableSelection();
+    </script>
+    <script>
+        $( "#frozen_authors" ).sortable({
+            update: function (event, ui) {
+                var data = $(this).sortable('serialize');
+                console.log(data);
+                // POST to server using $.post or $.ajax
+                $.ajax({
+                    data: data,
+                    type: 'POST',
+                    url: '{% url 'order_authors' article.pk %}'
+                });
+            }
+        });
+        $( "#frozen_authors" ).disableSelection();
+    </script>
 {% endblock %}
