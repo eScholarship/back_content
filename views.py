@@ -82,28 +82,15 @@ def article(request, article_id):
                 remote_form.save()
                 return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
-        if 'xml' in request.POST:
-            for uploaded_file in request.FILES.getlist('xml-file'):
+        if 'file' in request.FILES:
+            label = request.POST.get('label')
+            for uploaded_file in request.FILES.getlist('file'):
                 prod_logic.save_galley(
-                    article, request, uploaded_file,
+                    article,
+                    request,
+                    uploaded_file,
                     is_galley=True,
-                    label="XML",
-                )
-
-        if 'pdf' in request.POST:
-            for uploaded_file in request.FILES.getlist('pdf-file'):
-                prod_logic.save_galley(
-                    article, request, uploaded_file,
-                    is_galley=True,
-                    label="PDF",
-                )
-
-        if 'other' in request.POST:
-            for uploaded_file in request.FILES.getlist('other-file'):
-                prod_logic.save_galley(
-                    article, request, uploaded_file,
-                    is_galley=True,
-                    label="Other",
+                    label=label,
                 )
 
         if 'existing_author' in request.POST:
