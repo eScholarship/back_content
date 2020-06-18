@@ -106,6 +106,9 @@ def article(request, article_id):
                 models.ArticleAuthorOrder.objects.get_or_create(
                     article=article,
                     author=author,
+                    defaults={
+                        'order': article.next_author_sort(),
+                    }
                 )
                 return redirect(
                     reverse('bc_article', kwargs={'article_id': article_id})
@@ -143,6 +146,9 @@ def article(request, article_id):
             models.ArticleAuthorOrder.objects.get_or_create(
                 article=article,
                 author=author,
+                defaults={
+                    'order': article.next_author_sort(),
+                }
             )
 
             return redirect(reverse('bc_article', kwargs={'article_id': article_id}))
