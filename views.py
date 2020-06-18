@@ -148,8 +148,13 @@ def article(request, article_id):
             return redirect(reverse('bc_article', kwargs={'article_id': article_id}))
 
         if 'publish' in request.POST:
+            crossref_enabled = request.journal.get_setting(
+                'Identifiers',
+                'use_crossref',
+            )
             if not article.stage == models.STAGE_PUBLISHED:
-                id_logic.generate_crossref_doi_with_pattern(article)
+                if crossref_enabled:
+                    id_logic.generate_crossref_doi_with_pattern(article)
                 article.stage = models.STAGE_PUBLISHED
                 article.snapshot_authors(article)
                 article.save()
