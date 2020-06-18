@@ -1,10 +1,10 @@
 PLUGIN_NAME = 'Back Content Plugin'
 DESCRIPTION = 'This plugin supports the loading of back content via form or JATS XML.'
 AUTHOR = 'Andy Byers'
-VERSION = '1.2'
+VERSION = '1.3'
 SHORT_NAME = 'back_content'
 MANAGER_URL = 'bc_index'
-JANEWAY_VERSION = "1.3.6"
+JANEWAY_VERSION = "1.3.8"
 
 # Workflow Settings
 IS_WORKFLOW_PLUGIN = False
@@ -18,7 +18,7 @@ from utils import models
 
 def install():
     defaults = {"version": VERSION, "enabled": True}
-    new_plugin, created = models.Plugin.objects.get_or_create(
+    plugin, created = models.Plugin.objects.get_or_create(
             name=SHORT_NAME,
             defaults=defaults,
     )
@@ -26,7 +26,12 @@ def install():
     if created:
         print('Plugin {0} installed.'.format(PLUGIN_NAME))
     else:
-        print('Plugin {0} is already installed.'.format(PLUGIN_NAME))
+        if plugin.version != VERSION:
+            plugin.version = VERSION
+            plugin.save()
+            print('Plugin {0} version updated.'.format(PLUGIN_NAME))
+        else:
+            print('Plugin {0} is already installed.'.format(PLUGIN_NAME))
 
 
 def hook_registry():
