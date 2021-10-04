@@ -9,7 +9,7 @@ from django.http import Http404
 from submission import models, forms, logic
 from core import models as core_models, files
 from plugins.back_content import forms as bc_forms, logic as bc_logic, plugin_settings
-from production import logic as prod_logic
+from production import logic as prod_logic, forms as prod_forms
 from identifiers import logic as id_logic
 from security.decorators import editor_user_required
 from utils import shared
@@ -42,6 +42,7 @@ def article(request, article_id):
     author_form = forms.AuthorForm()
     pub_form = bc_forms.PublicationInfo(instance=article)
     remote_form = bc_forms.RemoteArticle(instance=article)
+    galley_form = prod_forms.GalleyForm()
     existing_author_form = bc_forms.ExistingAuthor()
     modal = None
 
@@ -185,7 +186,8 @@ def article(request, article_id):
         'galleys': prod_logic.get_all_galleys(article),
         'remote_form': remote_form,
         'existing_author_form': existing_author_form,
-        'modal': modal
+        'modal': modal,
+        'galley_form': galley_form,
     }
 
     return render(request, template, context)

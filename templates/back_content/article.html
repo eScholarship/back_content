@@ -4,6 +4,7 @@
 {% load securitytags %}
 {% load files %}
 {% load i18n %}
+{% load bool_fa %}
 
 {% block title %}Back Content Submission{% endblock %}
 
@@ -146,6 +147,7 @@
                         <tr style="text-align: left">
                             <th>Label</th>
                             <th width="25%">Filename</th>
+                            <th>Public</th>
                             <th>Type</th>
                             <th>Edit</th>
                             <th>Download</th>
@@ -166,6 +168,7 @@
                                               href="{% url 'bc_preview_xml_galley' article.pk galley.pk %}"><i
                                             class="fa fa-search" aria-hidden="true">&nbsp;</i>Preview</a>
                                     </small>{% endif %}</td>
+                                <td>{{ galley.public|bool_fa }}</td>
                                 <td>Galley</td>
                                 <td><a href="{% url 'pm_edit_galley' article.pk galley.pk %}" class="fa fa-edit"></a>
                                 </td>
