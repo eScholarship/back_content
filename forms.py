@@ -84,7 +84,7 @@ class ArticleInfo(KeywordModelForm):
             )
             self.fields['section'].required = True
             self.fields['license'].required = True
-            self.fields['primary_issue'].queryset = article.journal.issues()
+            self.fields['primary_issue'].queryset = article.journal.issues
 
             abstracts_required = article.journal.get_setting(
                 'general',
