@@ -94,6 +94,16 @@ def article(request, article_id):
                     label=label,
                 )
 
+        if 'set_main' in request.POST:
+            correspondence_author = request.POST.get('set_main', None)
+
+            if correspondence_author:
+                author = core_models.Account.objects.get(pk=correspondence_author)
+                article.correspondence_author = author
+                article.save()
+                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+
+
         if 'existing_author' in request.POST:
             existing_author_form = bc_forms.ExistingAuthor(request.POST)
             if existing_author_form.is_valid():
