@@ -33,9 +33,10 @@
                     <h2>Existing Articles</h2>
                 </div>
                 <div class="content">
-                    <table class="table table-bordered" id="unassigned">
+                    <table class="table table-bordered small" id="bcplugin">
                         <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Title</th>
                             <th>Submitted</th>
                             <th>Main Author</th>
@@ -46,6 +47,7 @@
                         <tbody>
                         {% for article in articles %}
                             <tr>
+                                <td>{{ article.pk }}</td>
                                 <td>{{ article.title }}</td>
                                 <td>{{ article.date_submitted }}</td>
                                 <td>{{ article.correspondence_author.full_name }}</td>
@@ -70,3 +72,7 @@
         </div>
     </section>
 {% endblock %}
+
+{% block js %}
+    {% include "elements/datatables.html" with target="#bcplugin" %}
+{% endblock js %}

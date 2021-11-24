@@ -198,6 +198,7 @@ def xml_import_upload(request):
     if request.POST and request.FILES:
         xml_file = request.FILES.get('xml_file')
         filename, path = files.save_file_to_temp(xml_file)
+
         return redirect(reverse('bc_xml_import_parse', kwargs={'filename': filename}))
 
     template = 'back_content/xml_import.html'
@@ -209,7 +210,6 @@ def xml_import_upload(request):
 @editor_user_required
 def xml_import_parse(request, filename):
     path = files.get_temp_file_path_from_name(filename)
-
     article = logic.import_from_jats_xml(path, request.journal)
     return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
@@ -221,7 +221,6 @@ def doi_import(request):
     if request.POST:
         form = bc_forms.RemoteParse(request.POST)
         if form.is_valid():
-            print(form.cleaned_data)
             url = form.cleaned_data['url']
             mode = form.cleaned_data['mode']
 
