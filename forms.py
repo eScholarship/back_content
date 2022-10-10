@@ -2,7 +2,7 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 
 from submission import models
-from review.forms import render_choices
+from review.logic import render_choices
 from utils.forms import KeywordModelForm
 from core import models as core_models
 
