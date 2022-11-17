@@ -1,7 +1,7 @@
 import requests
 
 from django.shortcuts import render, get_object_or_404, redirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib import messages
 from django.utils import timezone
 from django.http import Http404
