@@ -20,9 +20,13 @@ from events import logic as event_logic
 @editor_user_required
 def index(request):
     if request.POST:
-        article = models.Article.objects.create(journal=request.journal,
-                                                date_accepted=timezone.now(),
-                                                is_import=True)
+        article = models.Article.objects.create(
+            journal=request.journal,
+            date_accepted=timezone.now(),
+            is_import=True,
+            article_agreement='This record was created using the back '
+                              'content plugin.',
+        )
         return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
     articles = models.Article.objects.filter(journal=request.journal)
