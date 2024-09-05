@@ -1,10 +1,10 @@
 PLUGIN_NAME = 'Back Content Plugin'
 DESCRIPTION = 'This plugin supports the loading of back content via form or JATS XML.'
 AUTHOR = 'Andy Byers'
-VERSION = '1.3'
+VERSION = '1.4'
 SHORT_NAME = 'back_content'
 MANAGER_URL = 'bc_index'
-JANEWAY_VERSION = "1.5.0"
+JANEWAY_VERSION = "1.7.0"
 
 # Workflow Settings
 IS_WORKFLOW_PLUGIN = False
