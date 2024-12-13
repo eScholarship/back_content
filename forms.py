@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from submission import models
 from review.logic import render_choices
 from utils.forms import KeywordModelForm
-from core import models as core_models
+from core import models as core_models, model_utils
 
 
 class PublicationInfo(forms.ModelForm):
@@ -26,6 +26,9 @@ class PublicationInfo(forms.ModelForm):
             'peer_reviewed': 'If this article has been peer reviewed prior to'
                              'being loaded into Janeway check this box.'
         }
+        widgets = {
+            'date_accepted': model_utils.DateTimePickerInput,
+        }
 
     def __init__(self, *args, **kwargs):
         super(PublicationInfo, self).__init__(*args, **kwargs)
@@ -33,8 +36,6 @@ class PublicationInfo(forms.ModelForm):
             article = kwargs['instance']
             self.fields['primary_issue'].queryset = article.journal.issue_set.all()
             self.fields['render_galley'].queryset = article.galley_set.all()
-            self.fields['date_accepted'].widget.attrs['class'] = 'datepicker'
-            self.fields['date_published'].widget.attrs['class'] = 'datepicker'
 
 
 class RemoteArticle(forms.ModelForm):
