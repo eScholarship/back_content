@@ -1,0 +1,17 @@
+<div>
+  <h4 class="uppercase">Actions</h4>
+  <div class="flex portrait-row landscape-column gap-0-5 items-start">
+    <div>
+      <form method="POST">
+        {% csrf_token %}
+        <button
+          class="small button flex gap-0-25"
+          name="add_author"
+          value="{{ account.pk }}">
+          <span class="fa fa-user-plus"></span>
+          Add as Author
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

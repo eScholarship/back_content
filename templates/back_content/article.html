@@ -12,7 +12,7 @@
 {% block breadcrumbs %}
     {{ block.super }}
     <li><a href="{% url 'bc_index' %}">Back Content Plugin</a></li>
-    <li>{% if article.title %}{{ article.title }}{% else %}New Article{% endif %}</li>
+    <li>{% if article.title %}{{ article.safe_title }}{% else %}New Article{% endif %}</li>
 {% endblock breadcrumbs %}
 
 {% block body %}
@@ -20,20 +20,15 @@
         <div class="row expanded">
             <div class="large-12 columns box">
                 <div class="title-area">
-                    <h2>1. Add A New Article</h2>
+                    <h2>1. Article Metadata</h2>
                 </div>
                 <div class="content">
                     <form method="POST">
                         {% csrf_token %}
-                        <div class="large-6 columns">
+                        <div class="large-12 columns">
                             <label for="id_title">{% trans "Title" %}</label>
                             {{ article_form.title }}
                             {{ article_form.title.errors }}
-                        </div>
-                        <div class="large-6 columns">
-                            <label for="id_subtitle">{% trans "Subtitle" %}</label>
-                            {{ article_form.subtitle }}
-                            {{ article_form.subtitle.errors }}
                         </div>
                         <div class="large-12 columns">
                             <label for="id_abstract">
@@ -81,14 +76,9 @@
                         <p>{% trans "You can add an author by clicking the button below. This will open a popup modal for you to complete their details. If you do not have a legitimate email address for this author use @journal.com as a prefix for their email address and Janeway will ignore it." %}</p>
                         <a href="#" data-open="author" class="small success button">{% trans "Add New Author" %}</a>
                         {% include "admin/elements/submit/author.html" %}
-                        <p>{% trans "If you know of an existing author, you can select them from the below drop down." %}</p>
-                        <form method="POST">
-                            {% csrf_token %}
-                            <label for="id_section">{% trans "Existing Author" %}</label>
-                            {{ existing_author_form.author }}
-                            {{ existing_author_form.author.errors }}
-                            <button name="existing_author" class="success button">Add Existing Author</button>
-                        </form>
+                        <p>{% trans "If you know of an existing author, you can search for them." %}</p>
+                        <a href="{% url 'bc_article_authors' article.pk %}" class="small success button">Search Accounts for Authors</a>
+
                     </div>
                     <div class="large-5 columns" data-equalizer-watch>
                         <h4>{% trans "Current Authors" %}</h4>

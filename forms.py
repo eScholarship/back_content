@@ -58,13 +58,6 @@ class ArticleInfo(KeywordModelForm):
         'page_numbers', 'is_remote', 'remote_url', 'peer_reviewed')
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': _('Title')}),
-            'subtitle': forms.TextInput(
-                attrs={'placeholder': _('Subtitle')}),
-            'abstract': forms.Textarea(
-                attrs={
-                    'placeholder': _('Enter your article\'s abstract here')
-                }
-            ),
         }
 
     def __init__(self, *args, **kwargs):

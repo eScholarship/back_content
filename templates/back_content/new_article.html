@@ -41,28 +41,20 @@
                             <th>Submitted</th>
                             <th>Main Author</th>
                             <th>Section</th>
-                            <th></th>
                         </tr>
                         </thead>
                         <tbody>
                         {% for article in articles %}
                             <tr>
                                 <td>{{ article.pk }}</td>
-                                <td>{{ article.title }}</td>
+                                <td><a href="{% url 'bc_article' article.pk %}">{{ article.safe_title }}</a></td>
                                 <td>{{ article.date_submitted }}</td>
                                 <td>{{ article.correspondence_author.full_name }}</td>
                                 <td>{{ article.section.name }}</td>
-                                <td><a href="{% url 'bc_article' article.pk %}">View</a></td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td>No articles in this stage</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
+                                <td colspan="5">No articles in this stage</td>
                             </tr>
                         {% endfor %}
                         </tbody>
