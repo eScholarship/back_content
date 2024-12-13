@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.contrib import messages
 from django.utils import timezone
 from django.http import Http404
+from django.utils.translation import gettext_lazy as _
 
 from submission import models, forms, logic
 from core import models as core_models, files
@@ -29,7 +30,12 @@ def index(request):
         )
         return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
-    articles = models.Article.objects.filter(journal=request.journal)
+    articles = models.Article.objects.filter(
+        journal=request.journal,
+    ).select_related(
+        'correspondence_author',
+        'section',
+    )
 
     template = 'back_content/new_article.html'
     context = {
@@ -47,7 +53,6 @@ def article(request, article_id):
     pub_form = bc_forms.PublicationInfo(instance=article)
     remote_form = bc_forms.RemoteArticle(instance=article)
     galley_form = prod_forms.GalleyForm()
-    existing_author_form = bc_forms.ExistingAuthor()
     modal = None
 
     if request.POST:
@@ -106,28 +111,6 @@ def article(request, article_id):
                 article.correspondence_author = author
                 article.save()
                 return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
-
-
-        if 'existing_author' in request.POST:
-            existing_author_form = bc_forms.ExistingAuthor(request.POST)
-            if existing_author_form.is_valid():
-                author = existing_author_form.cleaned_data.get('author')
-                article.authors.add(author)
-                messages.add_message(
-                    request,
-                    messages.SUCCESS,
-                    'Author added to the article.',
-                )
-                models.ArticleAuthorOrder.objects.get_or_create(
-                    article=article,
-                    author=author,
-                    defaults={
-                        'order': article.next_author_sort(),
-                    }
-                )
-                return redirect(
-                    reverse('bc_article', kwargs={'article_id': article_id})
-                )
 
         if 'add_author' in request.POST:
             author_form = forms.AuthorForm(request.POST)
@@ -199,7 +182,6 @@ def article(request, article_id):
         'pub_form': pub_form,
         'galleys': prod_logic.get_all_galleys(article),
         'remote_form': remote_form,
-        'existing_author_form': existing_author_form,
         'modal': modal,
         'galley_form': galley_form,
     }
@@ -281,3 +263,82 @@ def preview_xml_galley(request, article_id, galley_id):
     }
 
     return render(request, template, context)
+
+
+from core.views import BaseUserList
+
+
+class BCPAuthorSearch(BaseUserList):
+
+    model = core_models.Account
+    template_name = 'back_content/author_search.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.article = get_object_or_404(
+            models.Article,
+            pk=kwargs.get('article_id'),
+            journal=request.journal,
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_facets(self):
+        facets = {
+            'q': {
+                'type': 'search',
+                'field_label': 'Search',
+            },
+            'is_active': {
+                'type': 'boolean',
+                'field_label': 'Active status',
+                'true_label': 'Active',
+                'false_label': 'Inactive',
+            },
+        }
+        return self.filter_facets_if_journal(facets)
+
+    def get_order_by_choices(self):
+        return [
+            ('last_name', _('Last name A-Z')),
+            ('-last_name', _('Last name Z-A')),
+            ('-date_joined', _('Newest')),
+            ('date_joined', _('Oldest')),
+        ]
+
+    def get_queryset(self, params_querydict=None):
+        queryset = super().get_queryset()
+        already_added_authors = self.article.authors.all()
+        return queryset.exclude(
+            pk__in=already_added_authors.values_list(
+                'pk',
+                flat=True,
+            ),
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['article'] = self.article
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if "add_author" in request.POST:
+            author_id = request.POST.get("add_author")
+            author = get_object_or_404(
+                core_models.Account,
+                pk=author_id,
+            )
+            if author in self.get_queryset():
+                self.article.authors.add(author)
+                models.ArticleAuthorOrder.objects.get_or_create(
+                    article=self.article,
+                    author=author,
+                    defaults={
+                        'order': self.article.next_author_sort(),
+                    }
+                )
+                messages.success(
+                    request,
+                    f"{author} has been added as an author.",
+                )
+
+        # No role management, so call the grandparent's post.
+        return super(BaseUserList, self).post(request, *args, **kwargs)

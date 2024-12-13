@@ -18,5 +18,11 @@ urlpatterns = [
 
     re_path(r'^article/(?P<article_id>\d+)/galley/(?P<galley_id>\d+)/figures/(?P<file_name>.*)/$',
         article_figure,
-        name='bc_article_figure'),
+        name='bc_article_figure',
+    ),
+    re_path(
+        r'^article/(?P<article_id>\d+)/authors/$',
+        views.BCPAuthorSearch.as_view(),
+        name='bc_article_authors',
+    ),
 ]
