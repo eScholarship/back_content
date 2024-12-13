@@ -362,22 +362,6 @@
         {% include "elements/open_modal.html" with target=modal %}
     {% endif %}
 
-    {% include "elements/datepicker.html" with target=".datepicker" %}
-
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.default.min.css"
-          integrity="sha256-ibvTNlNAB4VMqE5uFlnBME6hlparj5sEr1ovZ3B/bNA="
-          crossorigin="anonymous"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js"
-            integrity="sha256-+C0A5Ilqmu4QcSPxrlGpaZxJ04VjsRjKu+G82kl5UJk="
-            crossorigin="anonymous"></script>
-
-    <script>
-        $('#id_author').selectize({
-            create: true,
-            sortField: 'text'
-        });
-    </script>
     <style>
         .help-text {
             padding-top: 15px;
