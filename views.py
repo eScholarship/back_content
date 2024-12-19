@@ -47,8 +47,18 @@ def index(request):
 
 @editor_user_required
 def article(request, article_id):
-    article = get_object_or_404(models.Article, pk=article_id, journal=request.journal)
-    article_form = bc_forms.ArticleInfo(instance=article)
+    article = get_object_or_404(
+        models.Article,
+        pk=article_id,
+        journal=request.journal,
+    )
+    additional_fields = models.Field.objects.filter(
+        journal=request.journal,
+    )
+    article_form = bc_forms.ArticleInfo(
+        instance=article,
+        additional_fields=additional_fields,
+    )
     author_form = forms.AuthorForm()
     pub_form = bc_forms.PublicationInfo(instance=article)
     remote_form = bc_forms.RemoteArticle(instance=article)
@@ -57,11 +67,18 @@ def article(request, article_id):
 
     if request.POST:
         if 'save_section_1' in request.POST:
-            article_form = bc_forms.ArticleInfo(request.POST, instance=article)
+            article_form = bc_forms.ArticleInfo(
+                request.POST,
+                instance=article,
+                additional_fields=additional_fields,
+            )
 
             if article_form.is_valid():
                 article_form.save()
-                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+                return bc_logic.return_url(
+                    article,
+                    section='section-one',
+                )
 
         if 'save_section_2' in request.POST:
             correspondence_author = request.POST.get('main-author', None)
@@ -70,7 +87,10 @@ def article(request, article_id):
                 author = core_models.Account.objects.get(pk=correspondence_author)
                 article.correspondence_author = author
                 article.save()
-                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+                return bc_logic.return_url(
+                    article,
+                    section='section-two',
+                )
 
         if 'save_section_4' in request.POST:
             pub_form = bc_forms.PublicationInfo(request.POST, instance=article)
@@ -83,14 +103,20 @@ def article(request, article_id):
                 if article.date_published:
                     article.stage = models.STAGE_READY_FOR_PUBLICATION
                     article.save()
-                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+                return bc_logic.return_url(
+                    article,
+                    section='section-four',
+                )
 
         if 'save_section_5' in request.POST:
             remote_form = bc_forms.RemoteArticle(request.POST, instance=article)
 
             if remote_form.is_valid():
                 remote_form.save()
-                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+                return bc_logic.return_url(
+                    article,
+                    section='section-five',
+                )
 
         if 'file' in request.FILES:
             label = request.POST.get('label')
@@ -102,6 +128,10 @@ def article(request, article_id):
                     is_galley=True,
                     label=label,
                 )
+            return bc_logic.return_url(
+                article,
+                section='section-three',
+            )
 
         if 'set_main' in request.POST:
             correspondence_author = request.POST.get('set_main', None)
@@ -110,7 +140,10 @@ def article(request, article_id):
                 author = core_models.Account.objects.get(pk=correspondence_author)
                 article.correspondence_author = author
                 article.save()
-                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+                return bc_logic.return_url(
+                    article,
+                    section='section-two',
+                )
 
         if 'add_author' in request.POST:
             author_form = forms.AuthorForm(request.POST)
@@ -149,7 +182,39 @@ def article(request, article_id):
                 }
             )
 
-            return redirect(reverse('bc_article', kwargs={'article_id': article_id}))
+            return bc_logic.return_url(
+                article,
+                section='section-two',
+            )
+
+        if 'remove_author' in request.POST:
+            author_pk = request.POST.get('remove_author', None)
+            if author_pk:
+                author_to_remove = get_object_or_404(
+                    core_models.Account,
+                    pk=author_pk,
+                )
+                article.authors.remove(author_to_remove)
+                models.ArticleAuthorOrder.objects.filter(
+                    article=article,
+                    author=author_to_remove,
+                ).delete()
+                if author_to_remove == article.correspondence_author:
+                    article.correspondence_author = None
+                    article.save()
+                messages.success(
+                    request,
+                    f'{author_to_remove} removed from article.',
+                )
+            else:
+                messages.warning(
+                    request,
+                    f'No author ID provided.',
+                )
+            return bc_logic.return_url(
+                article,
+                section='section-two',
+            )
 
         if 'publish' in request.POST:
             crossref_enabled = request.journal.get_setting(
@@ -184,6 +249,7 @@ def article(request, article_id):
         'remote_form': remote_form,
         'modal': modal,
         'galley_form': galley_form,
+        'additional_fields': additional_fields,
     }
 
     return render(request, template, context)
@@ -305,10 +371,8 @@ class BCPAuthorSearch(BaseUserList):
         ]
 
     def get_queryset(self, params_querydict=None):
-        queryset = super().get_queryset()
-        already_added_authors = self.article.authors.all()
-        return queryset.exclude(
-            pk__in=already_added_authors.values_list(
+        return super().get_queryset().exclude(
+            pk__in=self.article.authors.all().values_list(
                 'pk',
                 flat=True,
             ),

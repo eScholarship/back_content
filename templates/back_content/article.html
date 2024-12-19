@@ -20,7 +20,7 @@
         <div class="row expanded">
             <div class="large-12 columns box">
                 <div class="title-area">
-                    <h2>1. Article Metadata</h2>
+                    <h2 id="section-one">1. Article Metadata</h2>
                 </div>
                 <div class="content">
                     <form method="POST">
@@ -61,6 +61,8 @@
                             Hit Enter to add a new keyword.
                         </div>
 
+                        {% include "admin/elements/submission/additional_fields.html" with form=article_form additional_fields=additional_fields %}
+
                         <div class="large-12 columns">
                             <button class="success button pull-right" type="submit" name="save_section_1"><i
                                     class="fa fa-check">&nbsp;</i>{% trans "Save Section 1" %}
@@ -69,7 +71,7 @@
                     </form>
                 </div>
                 <div class="title-area">
-                    <h2>2. Article Authors</h2>
+                    <h2 id="section-two">2. Article Authors</h2>
                 </div>
                 <div class="content" data-equalizer data-equalize-on="medium">
                     <div class="large-7 columns" data-equalizer-watch>
@@ -105,9 +107,9 @@
                                                 <td>
                                                     <button name="set_main" value="{{ order.author.pk }}" class="tiny button">Set as Main</button>
                                                 </td>
-                                                <td><a href="{% url 'delete_author' article.pk order.author.pk %}"><i
-                                                        class="fa fa-trash">
-                                                    &nbsp;</i></a></td>
+                                                <td>
+                                                  <button name="remove_author" value="{{ order.author.pk }}" class="tiny alert button">Remove</button>
+                                                </td>
                                             </tr>
                                             {% empty %}
                                             <tr>
@@ -137,7 +139,7 @@
                     </div>
                 </div>
                 <div class="title-area">
-                    <h2>3. Galleys</h2>
+                    <h2 id="section-three">3. Galleys</h2>
                 </div>
                 <div class="content">
                     <table class="table table-bordered table-condensed small">
@@ -223,7 +225,7 @@
                         &nbsp;</i>Upload a new galley</a>
 
                     <div class="title-area">
-                        <h2>4. Publication Info</h2>
+                        <h2 id="section-four">4. Publication Info</h2>
                     </div>
                     <div class="content">
                         <form method="POST">
@@ -259,7 +261,7 @@
                         </form>
                     </div>
                     <div class="title-area">
-                        <h2>5. Remote</h2>
+                        <h2 id="section-five">5. Remote</h2>
                     </div>
                     <div class="content">
                         <p>If your article is remote, you can fill the required details here. If the remote article has

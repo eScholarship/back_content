@@ -3,6 +3,7 @@ import uuid
 from bs4 import BeautifulSoup
 
 from django.contrib import messages
+from django.shortcuts import reverse, redirect
 
 from submission import models
 from identifiers import models as ident_models
@@ -83,3 +84,15 @@ def get_and_parse_doi_metadata(r, request, doi):
 
     messages.add_message(request, messages.SUCCESS, 'Article created.')
     return article
+
+
+def return_url(article, section=None):
+    url = reverse(
+        'bc_article',
+        kwargs={
+            'article_id': article.pk,
+        },
+    )
+    if section:
+        return redirect(f"{url}#{section}")
+    return redirect(url)
