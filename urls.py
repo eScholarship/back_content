@@ -8,9 +8,6 @@ urlpatterns = [
     re_path(r'^$', views.index, name='bc_index'),
     re_path(r'^article/(?P<article_id>\d+)/$', views.article, name='bc_article'),
 
-    re_path(r'^xml_import/$', views.xml_import_upload, name='bc_xml_import_upload'),
-    re_path(r'^xml_import/(?P<filename>[\w.-]{0,256})$', views.xml_import_parse, name='bc_xml_import_parse'),
-
     re_path(r'^doi_import/$', views.doi_import, name='bc_doi_import'),
 
     re_path(r'^article/(?P<article_id>\d+)/galley/(?P<galley_id>\d+)/$', views.preview_xml_galley,
