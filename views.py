@@ -7,27 +7,32 @@ from django.utils import timezone
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
+from security.decorators import editor_user_required
+
+from core.models import Account, Galley
+from core.views import BaseUserList
+
+from submission.models import (Article,
+                               ArticleAuthorOrder,
+                               STAGE_PUBLISHED)
 from submission.forms import AuthorForm
+from submission.logic import check_author_exists
+
+from production.forms import GalleyForm
+from production.logic import (save_galley,
+                              get_all_galleys)
+
+from journal.logic import get_galley_content
+
 from plugins.back_content.forms import (ArticleInfo,
                                         PublicationInfo,
                                         DepositAgreementForm,
                                         RemoteParse)
-from submission.models import (Article,
-                               ArticleAuthorOrder,
-                               STAGE_PUBLISHED)
-from security.decorators import editor_user_required
+from plugins.back_content.logic import (get_and_parse_doi_metadata,
+                                        parse_url_results)
 
-from submission.logic import check_author_exists
-from core.models import Account, Galley
 from utils.shared import generate_password
-from core.views import BaseUserList
 
-from production.logic import (save_galley,
-                              get_all_galleys,
-                              get_and_parse_doi_metadata,
-                              parse_url_results)
-from production.forms import GalleyForm
-from journal.logic import get_galley_content
 
 @editor_user_required
 def index(request):
@@ -255,13 +260,11 @@ def publish(request, article_id):
     )
 
     if request.method == 'POST':
-        print(request.POST)
         pub_form = PublicationInfo(request.POST, 
                                    instance=article)
         if pub_form.is_valid():
             article = pub_form.save()
             
-            print(article.primary_issue)
             if article.primary_issue:
                 article.primary_issue.articles.add(article)
                 article.save()
@@ -273,9 +276,9 @@ def publish(request, article_id):
                     article.stage = STAGE_PUBLISHED
                     article.snapshot_authors(article)
                     article.save()
-                return redirect('bc_index')
+                return redirect(reverse('manage_archive_article', kwargs={"article_id": article.pk}))
             else:
-                return redirect('bc_create_article')
+                return redirect(reverse('bc_create_article'))
     else:
         pub_form = PublicationInfo(instance=article)
 
