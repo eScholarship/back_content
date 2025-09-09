@@ -32,6 +32,8 @@ from plugins.back_content.logic import (get_and_parse_doi_metadata,
                                         parse_url_results)
 
 from utils.shared import generate_password
+from utils import setting_handler
+from identifiers.logic import generate_crossref_doi_with_pattern
 
 
 @editor_user_required
@@ -273,6 +275,10 @@ def publish(request, article_id):
                 return redirect('bc_index')
             elif 'publish' in request.POST:
                 if not article.stage == STAGE_PUBLISHED:
+                    if article.journal.get_setting('plugin:ezid',
+                                                   'ezid_plugin_enable'):
+                        if not article.get_doi():
+                            _id = generate_crossref_doi_with_pattern(article)
                     article.stage = STAGE_PUBLISHED
                     article.snapshot_authors(article)
                     article.save()
