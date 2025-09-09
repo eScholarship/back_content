@@ -19,56 +19,49 @@
     <section class="content">
         <div class="row expanded">
             <div class="large-12 columns box">
+                <form method="POST">
+                {% csrf_token %}
                 <div class="title-area">
                     <h2 id="section-one">1. Article Metadata</h2>
                 </div>
                 <div class="content">
-                    <form method="POST">
-                        {% csrf_token %}
-                        <div class="large-12 columns">
-                            <label for="id_title">{% trans "Title" %}</label>
-                            {{ article_form.title }}
-                            {{ article_form.title.errors }}
-                        </div>
-                        <div class="large-12 columns">
-                            <label for="id_abstract">
-                                {% trans "Abstract" %}{% if form.abstract.field.required %}*{% endif %}</label>
-                            {{ article_form.abstract }}
-                            {{ article_form.abstract.errors }}
-                        </div>
-                        <div class="large-4 columns">
-                            <label for="id_language">{% trans "Language" %}</label>
-                            {{ article_form.language }}
-                            {{ article_form.language.errors }}
-                        </div>
-                        <div class="large-4 columns">
-                            <label for="id_section">{% trans "Section" %}</label>
-                            {{ article_form.section }}
-                            {{ article_form.section.errors }}
-                        </div>
-                        <div class="large-4 columns error">
-                            <label for="id_license">{% if article_form.license.errors %}
-                                <span style="color: red;">{% endif %}{% trans "License" %}
-                                {% if article_form.license.errors %}</span>{% endif %}
-                                {% if article_form.license.field.required %}*{% endif %}</label>
-                            {{ article_form.license }}
-                            {{ article_form.license.errors }}
-                        </div>
-                        <div class="large-12 columns">
-                            <label for="id_keywords">Keywords</label>
-                            <input type="text" id="id_keywords" name="keywords" value="
-                                    {% if article_form.cleaned_data.keywords %}{{ article_form.cleaned_data.keywords }}{% else %}{% for keyword in article.keywords.all %}{{ keyword.word }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}"/>
-                            Hit Enter to add a new keyword.
-                        </div>
+                    <div class="large-12 columns">
+                        <label for="id_title">{% trans "Title" %}</label>
+                        {{ article_form.title }}
+                        {{ article_form.title.errors }}
+                    </div>
+                    <div class="large-12 columns">
+                        <label for="id_abstract">
+                            {% trans "Abstract" %}{% if form.abstract.field.required %}*{% endif %}</label>
+                        {{ article_form.abstract }}
+                        {{ article_form.abstract.errors }}
+                    </div>
+                    <div class="large-4 columns">
+                        <label for="id_language">{% trans "Language" %}</label>
+                        {{ article_form.language }}
+                        {{ article_form.language.errors }}
+                    </div>
+                    <div class="large-4 columns">
+                        <label for="id_section">{% trans "Section" %}</label>
+                        {{ article_form.section }}
+                        {{ article_form.section.errors }}
+                    </div>
+                    <div class="large-4 columns error">
+                        <label for="id_license">{% if article_form.license.errors %}
+                            <span style="color: red;">{% endif %}{% trans "License" %}
+                            {% if article_form.license.errors %}</span>{% endif %}
+                            {% if article_form.license.field.required %}*{% endif %}</label>
+                        {{ article_form.license }}
+                        {{ article_form.license.errors }}
+                    </div>
+                    <div class="large-12 columns">
+                        <label for="id_keywords">Keywords</label>
+                        <input type="text" id="id_keywords" name="keywords" value="
+                                {% if article_form.cleaned_data.keywords %}{{ article_form.cleaned_data.keywords }}{% else %}{% for keyword in article.keywords.all %}{{ keyword.word }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}"/>
+                        Hit Enter to add a new keyword.
+                    </div>
 
-                        {% include "admin/elements/submission/additional_fields.html" with form=article_form additional_fields=additional_fields %}
-
-                        <div class="large-12 columns">
-                            <button class="success button pull-right" type="submit" name="save_section_1"><i
-                                    class="fa fa-check">&nbsp;</i>{% trans "Save Section 1" %}
-                            </button>
-                        </div>
-                    </form>
+                    {% include "admin/elements/submission/additional_fields.html" with form=article_form additional_fields=additional_fields %}
                 </div>
                 <div class="title-area">
                     <h2 id="section-two">2. Article Authors</h2>
@@ -80,60 +73,51 @@
                         {% include "admin/elements/submit/author.html" %}
                         <p>{% trans "If you know of an existing author, you can search for them." %}</p>
                         <a href="{% url 'bc_article_authors' article.pk %}" class="small success button">Search Accounts for Authors</a>
-
                     </div>
                     <div class="large-5 columns" data-equalizer-watch>
                         <h4>{% trans "Current Authors" %}</h4>
                         <div class="row">
                             <div class="large-12 columns">
-                                <form method="POST">
-                                {% csrf_token %}
-                                    <table class="small scroll">
-                                        <thead>
-                                        <tr>
-                                            <th></th>
-                                            <th>{% trans "Name" %}</th>
-                                            <th>{% trans "Email" %}</th>
-                                            <th></th>
-                                            <th></th>
+                                <table class="small scroll">
+                                    <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Email" %}</th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="sortable">
+                                    {% for order in article.articleauthororder_set.all %}
+                                        <tr id="authors-{{ order.author.pk }}">
+                                            <td><i class="fa fa-sort"></i></td>
+                                            <td>{{ order.author.full_name }}</td>
+                                            <td>{{ order.author.email }}</td>
+                                            <td>
+                                                <button name="set_main" value="{{ order.author.pk }}" class="tiny button">Set as Main</button>
+                                            </td>
+                                            <td>
+                                                <button name="remove_author" value="{{ order.author.pk }}" class="tiny alert button">Remove</button>
+                                            </td>
                                         </tr>
-                                        </thead>
-                                        <tbody id="sortable">
-                                        {% for order in article.articleauthororder_set.all %}
-                                            <tr id="authors-{{ order.author.pk }}">
-                                                <td><i class="fa fa-sort"></i></td>
-                                                <td>{{ order.author.full_name }}</td>
-                                                <td>{{ order.author.email }}</td>
-                                                <td>
-                                                    <button name="set_main" value="{{ order.author.pk }}" class="tiny button">Set as Main</button>
-                                                </td>
-                                                <td>
-                                                  <button name="remove_author" value="{{ order.author.pk }}" class="tiny alert button">Remove</button>
-                                                </td>
-                                            </tr>
-                                            {% empty %}
-                                            <tr>
-                                                <td colspan="3">{% trans "No authors yet, add one!" %}</td>
-                                            </tr>
-                                        {% endfor %}
-                                    </table>
-                                </form>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="3">{% trans "No authors yet, add one!" %}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
                                 <hr/>
-                                <form method="POST">
-                                    {% csrf_token %}
-                                    <p>{% trans "You are required to select a main author, this author will receive the communications regarding your articles process through our systems. This does not have to be you." %}</p>
-                                    <label for="main-author">{% trans "Select main author" %}:</label>
-                                    <select class="form-control" id="main-author" name="main-author" required>
-                                        <option value="">---------</option>
-                                        {% for author in article.authors.all %}
-                                            <option value="{{ author.pk }}"
-                                                    {% if article.correspondence_author.pk == author.pk %}selected{% endif %}>{{ author.full_name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <br/>
-                                    <button class="success button pull-right" type="submit" name="save_section_2"><i
-                                            class="fa fa-check">&nbsp;</i>{% trans "Save Section 2" %}</button>
-                                </form>
+                                <p>{% trans "You are required to select a main author, this author will receive the communications regarding your articles process through our systems. This does not have to be you." %}</p>
+                                <label for="main-author">{% trans "Select main author" %}:</label>
+                                <select class="form-control" id="main-author" name="main-author" required>
+                                    <option value="">---------</option>
+                                    {% for author in article.authors.all %}
+                                        <option value="{{ author.pk }}"
+                                                {% if article.correspondence_author.pk == author.pk %}selected{% endif %}>{{ author.full_name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <br/>
                             </div>
                         </div>
                     </div>
@@ -228,59 +212,30 @@
                         <h2 id="section-four">4. Publication Info</h2>
                     </div>
                     <div class="content">
-                        <form method="POST">
-                            {% csrf_token %}
-                            <div class="large-4 columns">
-                                {{ pub_form.date_published|foundation }}
-                            </div>
-                            <div class="large-4 columns">
-                                {{ pub_form.date_accepted|foundation }}
-                            </div>
-                            <div class="large-4 columns">
-                                {{ pub_form.render_galley|foundation }}
-                            </div>
-                            <div class="large-4 columns">
-                                {{ pub_form.primary_issue|foundation }}
-                            </div>
-                            <div class="large-4 columns">
-                                {{ pub_form.page_numbers|foundation }}
-                            </div>
-                            <div class="large-4 columns">
-                                <br/>
-                                {{ pub_form.peer_reviewed|foundation }}
-                            </div>
-                            <div class="large-12 columns">
-                                {% if article and article.date_published %}
-                                <p>More Pub Info is available on the <a href="{% url 'publish_article' article.pk %}">Pre Publication Checklist</a>.</p>
-                                {% endif %}
-                            </div>
-                            <div class="large-12 columns">
-                                <button class="success button pull-right" type="submit" name="save_section_4"><i
-                                        class="fa fa-check">&nbsp;</i>{% trans "Save Section 4" %}</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="title-area">
-                        <h2 id="section-five">5. Remote</h2>
-                    </div>
-                    <div class="content">
-                        <p>If your article is remote, you can fill the required details here. If the remote article has
-                            a DOI, you should use it for full resolution. .</p>
-                        <form method="POST">
-                            {% csrf_token %}
-                            <div class="row expanded">
-                                <div class="large-6 columns">
-                                    {{ remote_form.is_remote|foundation }}
-                                </div>
-                                <div class="large-6 columns">
-                                    {{ remote_form.remote_url|foundation }}
-                                </div>
-                                <div class="large-12 columns">
-                                    <button class="success button pull-right" type="submit" name="save_section_5"><i
-                                            class="fa fa-check">&nbsp;</i>{% trans "Save Section 5" %}</button>
-                                </div>
-                            </div>
-                        </form>
+                        <div class="large-4 columns">
+                            {{ pub_form.date_published|foundation }}
+                        </div>
+                        <div class="large-4 columns">
+                            {{ pub_form.date_accepted|foundation }}
+                        </div>
+                        <div class="large-4 columns">
+                            {{ pub_form.render_galley|foundation }}
+                        </div>
+                        <div class="large-4 columns">
+                            {{ pub_form.primary_issue|foundation }}
+                        </div>
+                        <div class="large-4 columns">
+                            {{ pub_form.page_numbers|foundation }}
+                        </div>
+                        <div class="large-4 columns">
+                            <br/>
+                            {{ pub_form.peer_reviewed|foundation }}
+                        </div>
+                        <div class="large-12 columns">
+                            {% if article and article.date_published %}
+                            <p>More Pub Info is available on the <a href="{% url 'publish_article' article.pk %}">Pre Publication Checklist</a>.</p>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="title-area">
                         <h2>6. Publish</h2>
@@ -289,12 +244,17 @@
                         <p>When you are ready to publish your article, press the publish button and it will be
                             published.</p>
                         <div class="large-12 columns">
-                            <form method="POST">
-                                {% csrf_token %}
-                                <button class="success button pull-right" type="submit" name="publish">
+                            <div class="button-group">
+                                <button class="success button" type="submit" name="save_add">
+                                    Save & Add Another
+                                </button>
+                                <button class="success button" type="submit" name="save_add">
+                                    Save & Close
+                                </button>
+                                <button class="success button" type="submit" name="publish">
                                     <i class="fa fa-check-circle">&nbsp;</i>Publish
                                 </button>
-                            </form>
+                            </div>
                         </div>
                     </div>
                     {% if article.date_published %}

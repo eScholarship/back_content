@@ -1,0 +1,66 @@
+{% extends "admin/core/base.html" %}
+{% load foundation %}
+{% load static %}
+{% load securitytags %}
+{% load files %}
+{% load i18n %}
+
+{% block title %}Back Content Submission{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="{% url 'bc_index' %}">Back Content Plugin</a></li>
+{% endblock breadcrumbs %}
+
+{% block body %}
+    <section class="content">
+        <div class="row expanded">
+            <div class="box">
+                <div class="title-area">
+                    <h2>New Article</h2>
+                </div>
+                <div class="content">
+                    <p>To submit an article, click the start button below. You can import data from a DOI or URL below. JATS XML import is now handled in the Imports plugin.</p>
+                        <a href="{% url 'bc_create_article' %}" class="success button"><i class="fa fa-upload">&nbsp;</i>Start Submission</a>
+                        <a href="{% url 'bc_doi_import' %}" class="success button"><i class="fa fa-upload">&nbsp;</i>Import Metadata from DOI or URL</a>
+                    </form>
+                </div>
+                <div class="title-area">
+                    <h2>In Progress Articles</h2>
+                </div>
+                <div class="content">
+                    <table class="table table-bordered small" id="bcplugin">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Submitted</th>
+                            <th>Main Author</th>
+                            <th>Section</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for article in articles %}
+                            <tr>
+                                <td>{{ article.pk }}</td>
+                                <td><a href="{% url 'bc_edit_article' article.pk %}">{{ article.safe_title }}</a></td>
+                                <td>{{ article.date_submitted }}</td>
+                                <td>{{ article.correspondence_author.full_name }}</td>
+                                <td>{{ article.section.name }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">No articles in this stage</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block js %}
+    {% include "elements/datatables.html" with target="#bcplugin" %}
+{% endblock js %}

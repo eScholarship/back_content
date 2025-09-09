@@ -7,8 +7,8 @@
 {% block breadcrumbs %}
   {{ block.super }}
     <li><a href="{% url 'bc_index' %}">Back Content Plugin</a></li>
-    <li><a href="{% url 'bc_article' article.pk %}">{{ article.safe_title }}</a></li>
-    <li>Add Authors</li>
+    <li><a href="{% url 'bc_add_authors' article.pk %}">{{ article.safe_title }}</a></li>
+    <li>Search Authors</li>
 {% endblock %}
 
 {% block title %}Search for Authors | {{ block.super }}{% endblock %}
@@ -28,7 +28,7 @@
             you can return to the main article page.
           </p>
           <p>
-            <a href="{% url 'bc_article' article.pk %}#section-two" class="small success button">
+            <a href="{% url 'bc_add_authors' article.pk %}" class="small success button">
               Return to Main Article Page
             </a>
           </p>

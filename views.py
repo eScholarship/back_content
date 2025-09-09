@@ -7,149 +7,132 @@ from django.utils import timezone
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
-from submission import models, forms, logic
-from core import models as core_models, files
-from plugins.back_content import forms as bc_forms, logic as bc_logic, plugin_settings
-from production import logic as prod_logic, forms as prod_forms
-from identifiers import logic as id_logic
+from submission.forms import AuthorForm
+from plugins.back_content.forms import (ArticleInfo,
+                                        PublicationInfo,
+                                        DepositAgreementForm,
+                                        RemoteParse)
+from submission.models import (Article,
+                               ArticleAuthorOrder,
+                               STAGE_PUBLISHED)
 from security.decorators import editor_user_required
-from utils import shared
-from journal import logic as journal_logic
-from events import logic as event_logic
 
+from submission.logic import check_author_exists
+from core.models import Account, Galley
+from utils.shared import generate_password
+from core.views import BaseUserList
+
+from production.logic import (save_galley,
+                              get_all_galleys,
+                              get_and_parse_doi_metadata,
+                              parse_url_results)
+from production.forms import GalleyForm
+from journal.logic import get_galley_content
 
 @editor_user_required
 def index(request):
-    if request.POST:
-        article = models.Article.objects.create(
-            journal=request.journal,
-            date_accepted=timezone.now(),
-            is_import=True,
-            article_agreement='This record was created using the back '
-                              'content plugin.',
-        )
-        return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
-
-    articles = models.Article.objects.filter(
+    articles = Article.objects.filter(
         journal=request.journal,
+    ).exclude(
+        stage=STAGE_PUBLISHED
     ).select_related(
         'correspondence_author',
         'section',
     )
 
-    template = 'back_content/new_article.html'
+    template = 'back_content/index.html'
     context = {
         'articles': articles,
     }
 
     return render(request, template, context)
 
+@editor_user_required
+def create_article(request):
+    additional_fields = request.journal.field_set.all()
+    if request.method == 'POST':
+        article_form = ArticleInfo(request.POST,
+                                   additional_fields=additional_fields,
+                                   journal=request.journal)
+        deposit_form = DepositAgreementForm(request.POST)
+        if article_form.is_valid() and deposit_form.is_valid():
+            article = article_form.save()
+            article.journal = request.journal
+            article.owner = request.user
+            article.save()
+            return redirect(reverse('bc_add_authors', kwargs={"article_id": article.pk}))
+    else:
+        article_form = ArticleInfo(journal=request.journal,
+                                   additional_fields=additional_fields,)
+        deposit_form = DepositAgreementForm()
+
+    template = 'back_content/article_form.html'
+    context = {
+        'article_form': article_form,
+        'additional_fields': additional_fields,
+        'deposit_form': deposit_form
+    }
+
+    return render(request, template, context)
 
 @editor_user_required
-def article(request, article_id):
+def edit_article(request, article_id):
     article = get_object_or_404(
-        models.Article,
+        Article,
         pk=article_id,
         journal=request.journal,
     )
-    additional_fields = models.Field.objects.filter(
+
+    additional_fields = request.journal.field_set.all()
+    if request.method == 'POST':
+        article_form = ArticleInfo(request.POST,
+                                   additional_fields=additional_fields,
+                                   journal=request.journal,
+                                   instance=article)
+        if article_form.is_valid():
+            article = article_form.save(request=request)
+            article.journal = request.journal
+            article.owner = request.user
+            article.save()
+            if "save_continue" in request.POST:
+                return redirect(reverse('bc_add_authors', kwargs={"article_id": article.pk}))
+            else:
+                return redirect(reverse('bc_index'))
+    else:
+        article_form = ArticleInfo(journal=request.journal,
+                                   additional_fields=additional_fields,
+                                   instance=article)
+
+    template = 'back_content/article_form.html'
+    context = {
+        'article': article,
+        'article_form': article_form,
+        'additional_fields': additional_fields,
+    }
+
+    return render(request, template, context)
+
+@editor_user_required
+def add_authors(request, article_id):
+    article = get_object_or_404(
+        Article,
+        pk=article_id,
         journal=request.journal,
     )
-    article_form = bc_forms.ArticleInfo(
-        instance=article,
-        additional_fields=additional_fields,
-    )
-    author_form = forms.AuthorForm()
-    pub_form = bc_forms.PublicationInfo(instance=article)
-    remote_form = bc_forms.RemoteArticle(instance=article)
-    galley_form = prod_forms.GalleyForm()
-    modal = None
 
-    if request.POST:
-        if 'save_section_1' in request.POST:
-            article_form = bc_forms.ArticleInfo(
-                request.POST,
-                instance=article,
-                additional_fields=additional_fields,
-            )
+    if request.method == "POST":
 
-            if article_form.is_valid():
-                article_form.save()
-                return bc_logic.return_url(
-                    article,
-                    section='section-one',
-                )
+        correspondence_author = request.POST.get('main-author', None)
 
-        if 'save_section_2' in request.POST:
-            correspondence_author = request.POST.get('main-author', None)
-
-            if correspondence_author:
-                author = core_models.Account.objects.get(pk=correspondence_author)
-                article.correspondence_author = author
-                article.save()
-                return bc_logic.return_url(
-                    article,
-                    section='section-two',
-                )
-
-        if 'save_section_4' in request.POST:
-            pub_form = bc_forms.PublicationInfo(request.POST, instance=article)
-
-            if pub_form.is_valid():
-                pub_form.save()
-                if article.primary_issue:
-                    article.primary_issue.articles.add(article)
-
-                if article.date_published:
-                    article.stage = models.STAGE_READY_FOR_PUBLICATION
-                    article.save()
-                return bc_logic.return_url(
-                    article,
-                    section='section-four',
-                )
-
-        if 'save_section_5' in request.POST:
-            remote_form = bc_forms.RemoteArticle(request.POST, instance=article)
-
-            if remote_form.is_valid():
-                remote_form.save()
-                return bc_logic.return_url(
-                    article,
-                    section='section-five',
-                )
-
-        if 'file' in request.FILES:
-            label = request.POST.get('label')
-            for uploaded_file in request.FILES.getlist('file'):
-                prod_logic.save_galley(
-                    article,
-                    request,
-                    uploaded_file,
-                    is_galley=True,
-                    label=label,
-                )
-            return bc_logic.return_url(
-                article,
-                section='section-three',
-            )
-
-        if 'set_main' in request.POST:
-            correspondence_author = request.POST.get('set_main', None)
-
-            if correspondence_author:
-                author = core_models.Account.objects.get(pk=correspondence_author)
-                article.correspondence_author = author
-                article.save()
-                return bc_logic.return_url(
-                    article,
-                    section='section-two',
-                )
+        if correspondence_author:
+            author = Account.objects.get(pk=correspondence_author)
+            article.correspondence_author = author
+            article.save()
 
         if 'add_author' in request.POST:
-            author_form = forms.AuthorForm(request.POST)
-            modal = 'author'
+            author_form = AuthorForm(request.POST)
+            author = check_author_exists(request.POST.get('email'))
 
-            author = logic.check_author_exists(request.POST.get('email'))
             if author:
                 article.authors.add(author)
                 messages.add_message(
@@ -161,7 +144,7 @@ def article(request, article_id):
                 if author_form.is_valid():
                     author = author_form.save(commit=False)
                     author.username = author.email
-                    author.set_password(shared.generate_password())
+                    author.set_password(generate_password())
                     author.save()
                     author.add_account_role(
                         role_slug='author',
@@ -174,28 +157,22 @@ def article(request, article_id):
                         '%s added to the article' % author.full_name(),
                     )
 
-            models.ArticleAuthorOrder.objects.get_or_create(
+            ArticleAuthorOrder.objects.get_or_create(
                 article=article,
                 author=author,
                 defaults={
                     'order': article.next_author_sort(),
                 }
             )
-
-            return bc_logic.return_url(
-                article,
-                section='section-two',
-            )
-
-        if 'remove_author' in request.POST:
+        elif 'remove_author' in request.POST:
             author_pk = request.POST.get('remove_author', None)
             if author_pk:
                 author_to_remove = get_object_or_404(
-                    core_models.Account,
+                    Account,
                     pk=author_pk,
                 )
                 article.authors.remove(author_to_remove)
-                models.ArticleAuthorOrder.objects.filter(
+                ArticleAuthorOrder.objects.filter(
                     article=article,
                     author=author_to_remove,
                 ).delete()
@@ -211,67 +188,122 @@ def article(request, article_id):
                     request,
                     f'No author ID provided.',
                 )
-            return bc_logic.return_url(
-                article,
-                section='section-two',
-            )
+        elif "set_main" in request.POST:
+            correspondence_author = request.POST.get('set_main', None)
 
-        if 'publish' in request.POST:
-            crossref_enabled = request.journal.get_setting(
-                'Identifiers',
-                'use_crossref',
-            )
-            if not article.stage == models.STAGE_PUBLISHED:
-                if crossref_enabled:
-                    id_logic.generate_crossref_doi_with_pattern(article)
-                article.stage = models.STAGE_PUBLISHED
-                article.snapshot_authors(article)
+            if correspondence_author:
+                author = Account.objects.get(pk=correspondence_author)
+                article.correspondence_author = author
                 article.save()
-
-            if plugin_settings.IS_WORKFLOW_PLUGIN:
-                workflow_kwargs = {'handshake_url': 'bc_article',
-                                   'request': request,
-                                   'article': article,
-                                   'switch_stage': True}
-                return event_logic.Events.raise_event(event_logic.Events.ON_WORKFLOW_ELEMENT_COMPLETE,
-                                                      task_object=article,
-                                                      **workflow_kwargs)
+        else:
+            if "continue" in request.POST:
+                return redirect(reverse('bc_add_galleys', kwargs={"article_id": article.pk}))
+            elif "back" in request.POST:
+                return redirect(reverse('bc_edit_article', kwargs={"article_id": article.pk}))
             else:
                 return redirect(reverse('bc_index'))
+    else:
+        author_form = AuthorForm()
 
-    template = 'back_content/article.html'
     context = {
         'article': article,
-        'article_form': article_form,
         'form': author_form,
+    }
+    return render(request, "back_content/author_form.html", context)
+
+
+@editor_user_required
+def add_galleys(request, article_id):
+    article = get_object_or_404(
+        Article,
+        pk=article_id,
+        journal=request.journal,
+    )
+    galley_form = GalleyForm()
+    if request.method == "POST":
+        if "file" in request.FILES:
+            label = request.POST.get('label')
+            for uploaded_file in request.FILES.getlist('file'):
+                save_galley(
+                    article,
+                    request,
+                    uploaded_file,
+                    is_galley=True,
+                    label=label,
+                )
+        elif "continue" in request.POST:
+            return redirect(reverse('bc_publish_article', kwargs={"article_id": article.pk}))
+        elif "close" in request.POST:
+            return redirect(reverse('bc_index'))
+        elif "back" in request.POST:
+            return redirect(reverse('bc_add_authors', kwargs={"article_id": article.pk}))
+
+    context = {
+        "article": article,
+        'galleys': get_all_galleys(article),
+        "galley_form": galley_form
+    }
+    return render(request, "back_content/galley_form.html", context)
+
+
+@editor_user_required
+def publish(request, article_id):
+    article = get_object_or_404(
+        Article,
+        pk=article_id,
+        journal=request.journal,
+    )
+
+    if request.method == 'POST':
+        print(request.POST)
+        pub_form = PublicationInfo(request.POST, 
+                                   instance=article)
+        if pub_form.is_valid():
+            article = pub_form.save()
+            
+            print(article.primary_issue)
+            if article.primary_issue:
+                article.primary_issue.articles.add(article)
+                article.save()
+
+            if 'save_close' in request.POST:
+                return redirect('bc_index')
+            elif 'publish' in request.POST:
+                if not article.stage == STAGE_PUBLISHED:
+                    article.stage = STAGE_PUBLISHED
+                    article.snapshot_authors(article)
+                    article.save()
+                return redirect('bc_index')
+            else:
+                return redirect('bc_create_article')
+    else:
+        pub_form = PublicationInfo(instance=article)
+
+    template = 'back_content/publish_form.html'
+    context = {
         'pub_form': pub_form,
-        'galleys': prod_logic.get_all_galleys(article),
-        'remote_form': remote_form,
-        'modal': modal,
-        'galley_form': galley_form,
-        'additional_fields': additional_fields,
+        'article': article
     }
 
     return render(request, template, context)
 
-
 @editor_user_required
 def doi_import(request):
-    form = bc_forms.RemoteParse()
+    form = RemoteParse()
 
     if request.POST:
-        form = bc_forms.RemoteParse(request.POST)
+        form = RemoteParse(request.POST)
         if form.is_valid():
             url = form.cleaned_data['url']
             mode = form.cleaned_data['mode']
 
             if mode == 'doi':
                 r = requests.get('https://api.crossref.org/v1/works/{0}'.format(url)).json()
-                article = bc_logic.get_and_parse_doi_metadata(r, request, doi=url)
+                article = get_and_parse_doi_metadata(r, request, doi=url)
                 return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
             else:
                 r = requests.get(url)
-                article = bc_logic.parse_url_results(r, request)
+                article = parse_url_results(r, request)
                 return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
 
     template = 'back_content/doi_import.html'
@@ -280,7 +312,6 @@ def doi_import(request):
     }
 
     return render(request, template, context)
-
 
 @editor_user_required
 def preview_xml_galley(request, article_id, galley_id):
@@ -292,13 +323,13 @@ def preview_xml_galley(request, article_id, galley_id):
     :return: HttpResponse
     """
 
-    article = get_object_or_404(models.Article, journal=request.journal, pk=article_id)
-    galley = core_models.Galley.objects.filter(article=article, file__mime_type__contains='/xml', pk=galley_id)
+    article = get_object_or_404(Article, journal=request.journal, pk=article_id)
+    galley = Galley.objects.filter(article=article, file__mime_type__contains='/xml', pk=galley_id)
 
     if not galley:
         raise Http404
 
-    content = journal_logic.get_galley_content(article, galley)
+    content = get_galley_content(article, galley)
 
     template = 'journal/article.html'
     context = {
@@ -309,18 +340,14 @@ def preview_xml_galley(request, article_id, galley_id):
 
     return render(request, template, context)
 
-
-from core.views import BaseUserList
-
-
 class BCPAuthorSearch(BaseUserList):
 
-    model = core_models.Account
+    model = Account
     template_name = 'back_content/author_search.html'
 
     def dispatch(self, request, *args, **kwargs):
         self.article = get_object_or_404(
-            models.Article,
+            Article,
             pk=kwargs.get('article_id'),
             journal=request.journal,
         )
@@ -366,12 +393,12 @@ class BCPAuthorSearch(BaseUserList):
         if "add_author" in request.POST:
             author_id = request.POST.get("add_author")
             author = get_object_or_404(
-                core_models.Account,
+                Account,
                 pk=author_id,
             )
             if author in self.get_queryset():
                 self.article.authors.add(author)
-                models.ArticleAuthorOrder.objects.get_or_create(
+                ArticleAuthorOrder.objects.get_or_create(
                     article=self.article,
                     author=author,
                     defaults={

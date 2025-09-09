@@ -1,0 +1,112 @@
+{% extends "admin/core/base.html" %}
+
+{% load bool_fa %}
+{% load files %}
+
+{% block title %}Back Content Submission - Add Galleys{% endblock %}
+
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="{% url 'bc_index' %}">Back Content Plugin</a></li>
+    <li>{{ article.safe_title }}</li>
+{% endblock breadcrumbs %}
+
+{% block body %}
+<section class="content">
+    <div class="row expanded">
+        <div class="large-12 columns box">
+            <form method="POST">
+                {% csrf_token %}
+               <div class="title-area">
+                    <h2 id="section-three">3. Galleys</h2>
+                </div>
+                <div class="content">
+                    <p>
+                    <table class="table table-bordered table-condensed small">
+                        <tr style="text-align: left">
+                            <th>Label</th>
+                            <th width="25%">Filename</th>
+                            <th>Public</th>
+                            <th>Type</th>
+                            <th>Edit</th>
+                            <th>Download</th>
+                            <th>Replace</th>
+                            <th>History</th>
+                            <th>Create PDF</th>
+                        </tr>
+                        {% for galley in galleys %}
+                            {% can_view_file galley.file as can_view_file_flag %}
+                            {% can_edit_file galley.file article as can_edit_file_flag %}
+                            {% can_view_file_history galley.file article as can_view_file_history_flag %}
+                            <tr>
+                                <td>{{ galley.label }}</td>
+                                <td>{{ galley.file.original_filename|truncatechars:40 }} {% if galley.label == 'XML' %}
+                                    &nbsp;
+                                    <small><a target="_blank"
+                                              href="{% url 'bc_preview_xml_galley' article.pk galley.pk %}"><i
+                                            class="fa fa-search" aria-hidden="true">&nbsp;</i>Preview</a>
+                                    </small>{% endif %}</td>
+                                <td>{{ galley.public|bool_fa }}</td>
+                                <td>Galley</td>
+                                <td><a href="{% url 'pm_edit_galley' article.pk galley.pk %}" class="fa fa-edit"></a>
+                                </td>
+                                <td>{% if can_view_file_flag %}
+                                    <a href="{% url 'article_file_download' 'id' article.pk galley.file.pk %}"><i
+                                            class="fa fa-download">&nbsp;</i></a>{% endif %}
+                                </td>
+                                <td>{% if can_edit_file_flag %}
+                                    <a href="{% url 'article_file_replace' 'id' article.pk galley.file.pk %}?return={{ request.path|urlencode }}"><i
+                                            class="fa fa-cloud-upload">&nbsp;</i></a>{% endif %}
+                                </td>
+                                <td>{% if can_view_file_history_flag %}
+                                    <a href="{% url 'file_history' article.pk galley.file.pk %}?return={{ request.path|urlencode }}"><i
+                                            class="fa fa-history">
+                                        &nbsp;</i></a>{% endif %}
+                                </td>
+                                <td>
+                                    {% if galley.file.mime_type == 'application/xml' and not galley.has_missing_image_files %}
+                                        <a href="{% url 'cassius_generate' galley.pk %}?return={{ request.path|urlencode }}">
+                                            <i class="fa fa-file-text-o">&nbsp;</i>
+                                        </a>
+                                    {% elif not galley.file.mime_type == 'application/xml' %}
+                                        Function for XML only.
+                                    {% elif galley.file.mime_type == 'application/xml' and galley.has_missing_image_files %}
+                                        <p><span data-tooltip aria-haspopup="true" class="has-tip top"
+                                                 data-disable-hover="false"
+                                                 tabindex="2"
+                                                 title="{% has_missing_supplements galley %}">Missing Supplements</span>
+                                        </p>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9">No galleys have been uploaded.</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                    <a class="button success float-right" data-open="uploadbox">
+                        <i class="fa fa-cloud-upload">&nbsp;</i>
+                        Upload a new galley
+                    </a>
+                    </p>
+                    <hr>
+                    <div class="pull-right">
+                        <button class="success button" type="submit" name="back">
+                            <i class="fa fa-arrow-left">&nbsp;</i>Back
+                        </button>
+                        <button class="success button" type="submit" name="close">
+                            <i class="fa fa-close">&nbsp;</i>Close
+                        </button>
+                        <button class="success button" type="submit" name="continue">
+                            <i class="fa fa-arrow-right">&nbsp;</i>Continue
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% include "elements/production/new_galley.html" %}
+{% endblock body %}
