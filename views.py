@@ -15,12 +15,13 @@ from core.views import BaseUserList
 from submission.models import (Article,
                                ArticleAuthorOrder,
                                STAGE_PUBLISHED)
-from submission.forms import AuthorForm
+from submission.forms import AuthorForm, FileDetails
 from submission.logic import check_author_exists
 
 from production.forms import GalleyForm
 from production.logic import (save_galley,
-                              get_all_galleys)
+                              get_all_galleys,
+                              save_supp_file)
 
 from journal.logic import get_galley_content
 
@@ -32,9 +33,7 @@ from plugins.back_content.logic import (get_and_parse_doi_metadata,
                                         parse_url_results)
 
 from utils.shared import generate_password
-from utils import setting_handler
 from identifiers.logic import generate_crossref_doi_with_pattern
-
 
 @editor_user_required
 def index(request):
@@ -227,10 +226,27 @@ def add_galleys(request, article_id):
         journal=request.journal,
     )
     galley_form = GalleyForm()
+    supp_form = FileDetails()
+
     if request.method == "POST":
-        if "file" in request.FILES:
+        print(request.POST)
+        print(request.FILES)
+        if "supp-file" in request.FILES:
+            label = request.POST.get('label')
+            for uploaded_file in request.FILES.getlist('supp-file'):
+                print("add supp file")
+                save_supp_file(
+                    article,
+                    request,
+                    uploaded_file,
+                    label
+                )
+                print(article.supplementary_files.all())
+            return redirect(reverse('bc_add_galleys', kwargs={"article_id": article.pk}))
+        elif "file" in request.FILES:
             label = request.POST.get('label')
             for uploaded_file in request.FILES.getlist('file'):
+                print("add galley")
                 save_galley(
                     article,
                     request,
@@ -238,6 +254,7 @@ def add_galleys(request, article_id):
                     is_galley=True,
                     label=label,
                 )
+            return redirect(reverse('bc_add_galleys', kwargs={"article_id": article.pk}))
         elif "continue" in request.POST:
             return redirect(reverse('bc_publish_article', kwargs={"article_id": article.pk}))
         elif "close" in request.POST:
@@ -248,7 +265,8 @@ def add_galleys(request, article_id):
     context = {
         "article": article,
         'galleys': get_all_galleys(article),
-        "galley_form": galley_form
+        "galley_form": galley_form,
+        "supp_form": supp_form
     }
     return render(request, "back_content/galley_form.html", context)
 
