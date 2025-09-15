@@ -196,24 +196,19 @@ def add_galleys(request, article_id):
     supp_form = FileDetails()
 
     if request.method == "POST":
-        print(request.POST)
-        print(request.FILES)
         if "supp-file" in request.FILES:
             label = request.POST.get('label')
             for uploaded_file in request.FILES.getlist('supp-file'):
-                print("add supp file")
                 save_supp_file(
                     article,
                     request,
                     uploaded_file,
                     label
                 )
-                print(article.supplementary_files.all())
             return redirect(reverse('bc_add_galleys', kwargs={"article_id": article.pk}))
         elif "file" in request.FILES:
             label = request.POST.get('label')
             for uploaded_file in request.FILES.getlist('file'):
-                print("add galley")
                 save_galley(
                     article,
                     request,
