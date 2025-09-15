@@ -1,7 +1,8 @@
 {% extends "admin/core/base.html" %}
 
-{% block title %}Back Content Submission - Add Authors{% endblock %}
+{% load static bool_fa securitytags %}
 
+{% block title %}Back Content Submission - Add Authors{% endblock %}
 
 {% block breadcrumbs %}
     {{ block.super }}
@@ -10,83 +11,99 @@
 {% endblock breadcrumbs %}
 
 {% block body %}
+{% can_see_pii_tag article as can_see_pii %}
 <section class="content">
     <div class="row expanded">
         <div class="large-12 columns box">
             <div class="title-area">
-                <h2>Article Authors</h2>
+                <h2 id="edit-metadata-authors">Article Authors</h2>
+                {% if frozen_author %}
+                    <a href="{% url 'edit_metadata' article.pk %}?modal=author&return={{ return }}" class="button">Add Author</a>
+                {% else %}
+                    <a href="#" class="button" data-open="author">Add Author</a>
+                {% endif %}
             </div>
-            <div class="content" data-equalizer data-equalize-on="medium">
-                <div class="large-7 columns" data-equalizer-watch>
-                    <p>{% trans "You can add an author by clicking the button below. This will open a popup modal for you to complete their details. If you do not have a legitimate email address for this author use @journal.com as a prefix for their email address and Janeway will ignore it." %}</p>
-                    <a href="#" data-open="author" class="small success button">{% trans "Add New Author" %}</a>
-                    {% include "admin/elements/submit/author.html" %}
-                    <p>{% trans "If you know of an existing author, you can search for them." %}</p>
-                    <a href="{% url 'bc_article_authors' article.pk %}" class="small success button">Search Accounts for Authors</a>
-                </div>
-                <div class="large-5 columns" data-equalizer-watch>
-                    <h4>{% trans "Current Authors" %}</h4>
-                    <div class="row">
-                        <form method="POST">
-                            {% csrf_token %}
-                            <table class="small scroll">
-                                <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>{% trans "Name" %}</th>
-                                    <th>{% trans "Email" %}</th>
-                                    <th></th>
-                                    <th></th>
-                                </tr>
-                                </thead>
-                                <tbody id="sortable">
-                                {% for order in article.articleauthororder_set.all %}
-                                    <tr id="authors-{{ order.author.pk }}">
-                                        <td><i class="fa fa-sort"></i></td>
-                                        <td>{{ order.author.full_name }}</td>
-                                        <td>{{ order.author.email }}</td>
-                                        <td>
-                                            <button name="set_main" value="{{ order.author.pk }}" class="tiny button">Set as Main</button>
-                                        </td>
-                                        <td>
-                                            <button name="remove_author" value="{{ order.author.pk }}" class="tiny alert button">Remove</button>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="3">{% trans "No authors yet, add one!" %}</td>
-                                    </tr>
-                                {% endfor %}
-                            </table>
-                        </form>
-                        <hr/>
-                        <form method="POST">
-                            {% csrf_token %}
-                            <p>{% trans "You are required to select a main author, this author will receive the communications regarding your articles process through our systems. This does not have to be you." %}</p>
-                            <label for="main-author">{% trans "Select main author" %}:</label>
-                            <select class="form-control" id="main-author" name="main-author" required>
-                                <option value="">---------</option>
-                                {% for author in article.authors.all %}
-                                    <option value="{{ author.pk }}"
-                                            {% if article.correspondence_author.pk == author.pk %}selected{% endif %}>{{ author.full_name }}</option>
-                                {% endfor %}
-                            </select>
-                            <div class="pull-right">
-                                <button class="success button" type="submit" name="back">
-                                    <i class="fa fa-arrow-left">&nbsp;</i>Back
-                                </button>
-                                <button class="success button" type="submit" name="close">
-                                    <i class="fa fa-close">&nbsp;</i>Close
-                                </button>
-                                <button class="success button" type="submit" name="continue">
-                                    <i class="fa fa-arrow-right">&nbsp;</i>Continue
-                                </button>
-                            </div>
-                        </form>
+            <div class="submission-content">
+                <form method="POST">
+                    {% csrf_token %}
+                    <table class="small scroll">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Display Email Link?</th>
+                            <th>Institution</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody id="sortable">
+                        {% for f_author in article.frozen_authors %}
+                            <tr id="authors-{{ f_author.pk }}">
+                                <td><i class="fa fa-sort"></i></td>
+                                <td>{{ f_author.full_name|se_can_see_pii:article }}</td>
+                                <td>{{ f_author.email|se_can_see_pii:article }}</td>
+                                <td>{{ f_author.display_email|bool_fa }}</td>
+                                <td>{{ f_author.institution|se_can_see_pii:article }}</td>
+                                <td>{% if can_see_pii %}
+                                <a href="?author={{ f_author.pk }}&return={{ return }}"><i
+                                        class="fa fa-edit">&nbsp;</i>Edit</a>
+                                {% else %}
+                                    Author data cannot be edited
+                                {% endif %}
+                                </td>
+                                <td>
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <button type="submit" name="delete" value="{{ f_author.pk }}"><i
+                                                class="fa fa-trash">&nbsp;</i>Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="pull-right">
+                        <button class="success button" type="submit" name="back">
+                            <i class="fa fa-arrow-left">&nbsp;</i>Back
+                        </button>
+                        <button class="success button" type="submit" name="close">
+                            <i class="fa fa-close">&nbsp;</i>Save & Close
+                        </button>
+                        <button class="success button" type="submit" name="continue">
+                            <i class="fa fa-arrow-right">&nbsp;</i>Save & Continue
+                        </button>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
 </section>
+{% include "admin/elements/submission/edit_author.html" %}
 {% endblock body %}
+
+{% block js %}
+    {% if modal %}
+        {% include "admin/elements/open_modal.html" with target=modal %}
+    {% endif %}
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+    <script type="text/javascript" src="{% static "common/js/jq-ui.min.js" %}"></script>
+    <script>
+        $( "#sortable" ).sortable({
+            update: function (event, ui) {
+                var data = $(this).sortable('serialize');
+                console.log(data);
+                // POST to server using $.post or $.ajax
+                $.ajax({
+                    data: data,
+                    type: 'POST',
+                    url: '{% url 'order_authors' article.pk %}'
+                });
+            }
+        });
+        $( "#sortable" ).disableSelection();
+    </script>
+{% endblock js %}
+

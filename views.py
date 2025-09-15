@@ -14,9 +14,10 @@ from core.views import BaseUserList
 
 from submission.models import (Article,
                                ArticleAuthorOrder,
+                               FrozenAuthor,
                                STAGE_PUBLISHED)
-from submission.forms import AuthorForm, FileDetails
-from submission.logic import check_author_exists
+from submission.forms import FileDetails, EditFrozenAuthor
+from submission.logic import get_author
 
 from production.forms import GalleyForm
 from production.logic import (save_galley,
@@ -32,7 +33,6 @@ from plugins.back_content.forms import (ArticleInfo,
 from plugins.back_content.logic import (get_and_parse_doi_metadata,
                                         parse_url_results)
 
-from utils.shared import generate_password
 from identifiers.logic import generate_crossref_doi_with_pattern
 
 @editor_user_required
@@ -126,81 +126,48 @@ def add_authors(request, article_id):
         journal=request.journal,
     )
 
+    frozen_author, modal, author_form = None, None, EditFrozenAuthor()
+    if request.GET.get('author'):
+        frozen_author, modal = get_author(request, article)
+        author_form = EditFrozenAuthor(instance=frozen_author)
+    elif request.GET.get('modal') == 'author':
+        modal = 'author'
+
+
     if request.method == "POST":
+        if 'author' in request.POST:
+            author_form = EditFrozenAuthor(
+                request.POST,
+                instance=frozen_author,
+            )
 
-        correspondence_author = request.POST.get('main-author', None)
-
-        if correspondence_author:
-            author = Account.objects.get(pk=correspondence_author)
-            article.correspondence_author = author
-            article.save()
-
-        if 'add_author' in request.POST:
-            author_form = AuthorForm(request.POST)
-            author = check_author_exists(request.POST.get('email'))
-
-            if author:
-                article.authors.add(author)
+            if author_form.is_valid():
+                saved_author = author_form.save()
+                saved_author.article = article
+                saved_author.save()
                 messages.add_message(
                     request,
                     messages.SUCCESS,
-                    '%s added to the article' % author.full_name(),
+                    _('Author {author_name} updated.').format(
+                        author_name=saved_author.full_name(),
+                    ),
                 )
-            else:
-                if author_form.is_valid():
-                    author = author_form.save(commit=False)
-                    author.username = author.email
-                    author.set_password(generate_password())
-                    author.save()
-                    author.add_account_role(
-                        role_slug='author',
-                        journal=request.journal,
-                    )
-                    article.authors.add(author)
-                    messages.add_message(
-                        request,
-                        messages.SUCCESS,
-                        '%s added to the article' % author.full_name(),
-                    )
-
-            ArticleAuthorOrder.objects.get_or_create(
+                return redirect(reverse('bc_add_authors', kwargs={"article_id": article.pk}))
+        elif 'delete' in request.POST:
+            frozen_author_id = request.POST.get('delete')
+            frozen_author = get_object_or_404(
+                FrozenAuthor,
+                pk=frozen_author_id,
                 article=article,
-                author=author,
-                defaults={
-                    'order': article.next_author_sort(),
-                }
+                article__journal=request.journal,
             )
-        elif 'remove_author' in request.POST:
-            author_pk = request.POST.get('remove_author', None)
-            if author_pk:
-                author_to_remove = get_object_or_404(
-                    Account,
-                    pk=author_pk,
-                )
-                article.authors.remove(author_to_remove)
-                ArticleAuthorOrder.objects.filter(
-                    article=article,
-                    author=author_to_remove,
-                ).delete()
-                if author_to_remove == article.correspondence_author:
-                    article.correspondence_author = None
-                    article.save()
-                messages.success(
-                    request,
-                    f'{author_to_remove} removed from article.',
-                )
-            else:
-                messages.warning(
-                    request,
-                    f'No author ID provided.',
-                )
-        elif "set_main" in request.POST:
-            correspondence_author = request.POST.get('set_main', None)
-
-            if correspondence_author:
-                author = Account.objects.get(pk=correspondence_author)
-                article.correspondence_author = author
-                article.save()
+            frozen_author.delete()
+            messages.add_message(
+                request,
+                messages.SUCCESS,
+                _('Frozen Author deleted.'),
+            )
+            return redirect(reverse('bc_add_authors', kwargs={"article_id": article.pk}))
         else:
             if "continue" in request.POST:
                 return redirect(reverse('bc_add_galleys', kwargs={"article_id": article.pk}))
@@ -208,12 +175,12 @@ def add_authors(request, article_id):
                 return redirect(reverse('bc_edit_article', kwargs={"article_id": article.pk}))
             else:
                 return redirect(reverse('bc_index'))
-    else:
-        author_form = AuthorForm()
 
     context = {
         'article': article,
-        'form': author_form,
+        'author_form': author_form,
+        "modal": modal,
+        'frozen_author': frozen_author,
     }
     return render(request, "back_content/author_form.html", context)
 
@@ -291,6 +258,8 @@ def publish(request, article_id):
 
             if 'save_close' in request.POST:
                 return redirect('bc_index')
+            elif 'back' in request.POST:
+                return redirect(reverse('bc_add_galleys', kwargs={"article_id": article.pk}))
             elif 'publish' in request.POST:
                 if not article.stage == STAGE_PUBLISHED:
                     if article.journal.get_setting('plugin:ezid',
