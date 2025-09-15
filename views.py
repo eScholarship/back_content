@@ -252,6 +252,11 @@ def publish(request, article_id):
                 article.save()
 
             if 'save_close' in request.POST:
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    _(f'{article} saved.'),
+                )
                 return redirect('bc_index')
             elif 'back' in request.POST:
                 return redirect(reverse('bc_add_galleys', kwargs={"article_id": article.pk}))
@@ -264,6 +269,11 @@ def publish(request, article_id):
                     article.stage = STAGE_PUBLISHED
                     article.snapshot_authors(article)
                     article.save()
+                    messages.add_message(
+                        request,
+                        messages.SUCCESS,
+                        _(f'{article} published.'),
+                    )
                 return redirect(reverse('manage_archive_article', kwargs={"article_id": article.pk}))
             else:
                 return redirect(reverse('bc_create_article'))
