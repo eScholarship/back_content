@@ -34,6 +34,7 @@ from plugins.back_content.logic import (get_and_parse_doi_metadata,
                                         parse_url_results)
 
 from identifiers.logic import generate_crossref_doi_with_pattern
+from events.logic import Events
 
 @editor_user_required
 def index(request):
@@ -269,6 +270,13 @@ def publish(request, article_id):
                     article.stage = STAGE_PUBLISHED
                     article.snapshot_authors(article)
                     article.save()
+                    kwargs = {'article': article,
+                              'request': request}
+                    Events.raise_event(
+                        Events.ON_ARTICLE_PUBLISHED,
+                        task_object=article,
+                        **kwargs,
+                    )
                     messages.add_message(
                         request,
                         messages.SUCCESS,
