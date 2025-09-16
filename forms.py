@@ -1,5 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from django.urls import reverse_lazy
+from django.utils.text import format_lazy
 
 from submission.models import Article, Licence, Section, FieldAnswer, Field
 from review.logic import render_choices
@@ -10,7 +12,7 @@ from core.model_utils import DateTimePickerInput
 
 class DepositAgreementForm(forms.Form):
     deposit_agreement = forms.BooleanField(
-        help_text="The author(s) of this article have signed a PDF, clicked through a form, or otherwise documented agreement to the journal's copyright agreement, which grants the journal permission to publish this article. (The agreement should match the one on file with eScholarship staff, which you can view here. If you have questions please contact eScholarship.)"
+        help_text=format_lazy("The author(s) of this article have signed a PDF, clicked through a form, or otherwise documented agreement to the journal's copyright agreement, which grants the journal permission to publish this article. (The agreement should match the one on file with eScholarship staff, which you can <a href='{}'>view here</a>. If you have questions please <a href='https://help.escholarship.org/support/tickets/new'>contact eScholarship</a>.)",  reverse_lazy('journal_submissions'))
     )
 
 class PublicationInfo(forms.ModelForm):
