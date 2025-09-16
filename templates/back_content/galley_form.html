@@ -1,0 +1,165 @@
+{% extends "admin/core/base.html" %}
+
+{% load bool_fa %}
+{% load files %}
+
+{% block title %}Back Content Submission - Add Galleys{% endblock %}
+
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="{% url 'bc_index' %}">Back Content Plugin</a></li>
+    <li>{{ article.safe_title }}</li>
+{% endblock breadcrumbs %}
+
+{% block body %}
+<section class="content">
+    <div class="row expanded">
+        <div class="large-12 columns box">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="title-area">
+                    <h2>Galleys</h2>
+                </div>
+                <div class="submission-content">
+                    <table id="files" class="small files">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Label</th>
+                            <th>Filename</th>
+                            <th>Type</th>
+                            <th>Public</th>
+                            <th>Uploaded</th>
+                            <th>Modified</th>
+                            <th>Download</th>
+                            <th>History</th>
+                            <th>Replace</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for galley in galleys %}
+                            {% with file=galley.file %}
+                                {% can_edit_file file article as can_edit_file_flag %}
+                                {% can_view_file file as can_view_file_flag %}
+                                {% can_view_file_history file article as can_view_file_history_flag %}
+                                <tr>
+                                    <td>{{ file.pk }}</td>
+                                    <td class="wrap-long-text">{% if not file.label %}No Label{% endif %}{{ file.label }}</td>
+                                    <td class="wrap-long-text">{{ file }}</td>
+                                    <td>{% file_type article file %}</td>
+                                    <td>{{ galley.public|bool_fa }}</td>
+                                    <td>{{ file.date_uploaded|date:"Y-m-d G:i" }}</td>
+                                    <td>{{ file.last_modified|date:"Y-m-d G:i" }}</td>
+                                    <td>{% if can_view_file_flag %}
+                                        <a href="{% url 'article_file_download' 'id' article.pk file.pk %}"><i
+                                                class="fa fa-download">
+                                            &nbsp;</i></a>{% endif %}</td>
+                                    <td>{% if can_view_file_history_flag %}
+                                        <a href="{% url 'file_history' article.pk file.pk %}?return={{ request.path|urlencode }}"><i
+                                                class="fa fa-history">
+                                            &nbsp;</i></a>{% endif %}
+                                    </td>
+                                    <td>{% if can_edit_file_flag %}
+                                        <a href="{% url 'article_file_replace' 'id' article.pk file.pk %}?return={{ request.path|urlencode }}%3Freturn%3D{{ request.GET.return|urlencode }}"><i
+                                                class="fa fa-cloud-upload">&nbsp;</i></a>{% endif %}</td>
+                                    <td>{% if can_edit_file_flag %}
+                                        <a href="{% url 'file_delete' article.pk file.pk %}?return={{ request.path|urlencode }}%3Freturn%3D{{ request.GET.return|urlencode }}"><i
+                                                class="fa fa-trash">
+                                            &nbsp;</i></a>{% endif %}</td>
+                                </tr>
+                            {% endwith %}
+                        {% empty %}
+                            <tr>
+                                <td colspan="9">No files have been uploaded.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                    <a class="button success float-right" data-open="uploadbox">
+                        <i class="fa fa-cloud-upload">&nbsp;</i>
+                        Upload a new galley
+                    </a>
+                </div>
+                <div class="title-area">
+                    <h2>Supplementary Files</h2>
+                </div>
+                <div class="submission-content">
+                    <table id="files" class="small files">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Label</th>
+                            <th>Filename</th>
+                            <th>Type</th>
+                            <th>Uploaded</th>
+                            <th>Modified</th>
+                            <th>Download</th>
+                            <th>History</th>
+                            <th>Replace</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for s in article.supplementary_files.all %}
+                            {% with file=s.file %}
+                                {% can_edit_file file article as can_edit_file_flag %}
+                                {% can_view_file file as can_view_file_flag %}
+                                {% can_view_file_history file article as can_view_file_history_flag %}
+                                <tr>
+                                    <td>{{ file.pk }}</td>
+                                    <td class="wrap-long-text">{% if not file.label %}No Label{% endif %}{{ file.label }}</td>
+                                    <td class="wrap-long-text">{{ file }}</td>
+                                    <td>{% file_type article file %}</td>
+                                    <td>{{ file.date_uploaded|date:"Y-m-d G:i" }}</td>
+                                    <td>{{ file.last_modified|date:"Y-m-d G:i" }}</td>
+                                    <td>{% if can_view_file_flag %}
+                                        <a href="{% url 'article_file_download' 'id' article.pk file.pk %}"><i
+                                                class="fa fa-download">
+                                            &nbsp;</i></a>{% endif %}</td>
+                                    <td>{% if can_view_file_history_flag %}
+                                        <a href="{% url 'file_history' article.pk file.pk %}?return={{ request.path|urlencode }}"><i
+                                                class="fa fa-history">
+                                            &nbsp;</i></a>{% endif %}
+                                    </td>
+                                    <td>{% if can_edit_file_flag %}
+                                        <a href="{% url 'article_file_replace' 'id' article.pk file.pk %}?return={{ request.path|urlencode }}%3Freturn%3D{{ request.GET.return|urlencode }}"><i
+                                                class="fa fa-cloud-upload">&nbsp;</i></a>{% endif %}</td>
+                                    <td>{% if can_edit_file_flag %}
+                                        <a href="{% url 'file_delete' article.pk file.pk %}?return={{ request.path|urlencode }}%3Freturn%3D{{ request.GET.return|urlencode }}"><i
+                                                class="fa fa-trash">
+                                            &nbsp;</i></a>{% endif %}</td>
+                                </tr>
+                            {% endwith %}
+                        {% empty %}
+                            <tr>
+                                <td colspan="9">No files have been uploaded.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                    <a class="button success float-right" data-open="suppfile">
+                        <i class="fa fa-cloud-upload">&nbsp;</i>
+                        Upload a new supplementary file
+                    </a>
+                </div>
+                <hr>
+                <div class="pull-right">
+                    <button class="success button" type="submit" name="back">
+                        <i class="fa fa-arrow-left">&nbsp;</i>Back
+                    </button>
+                    <button class="success button" type="submit" name="close">
+                        <i class="fa fa-close">&nbsp;</i>Save & Close
+                    </button>
+                    <button class="success button" type="submit" name="continue">
+                        <i class="fa fa-arrow-right">&nbsp;</i>Save & Continue
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% include "elements/production/new_galley.html" %}
+{% include "elements/production/new_supp_file.html" %}
+{% endblock body %}

@@ -1,0 +1,110 @@
+{% extends "admin/core/base.html" %}
+
+{% load static bool_fa securitytags %}
+
+{% block title %}Back Content Submission - Add Authors{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="{% url 'bc_index' %}">Back Content Plugin</a></li>
+    <li>{{ article.safe_title }}</li>
+{% endblock breadcrumbs %}
+
+{% block body %}
+{% can_see_pii_tag article as can_see_pii %}
+<section class="content">
+    <div class="row expanded">
+        <div class="large-12 columns box">
+            <div class="title-area">
+                <h2 id="edit-metadata-authors">Article Authors</h2>
+                {% if frozen_author %}
+                    <a href="{% url 'edit_metadata' article.pk %}?modal=author&return={{ return }}" class="button">Add Author</a>
+                {% else %}
+                    <a href="#" class="button" data-open="author">Add Author</a>
+                {% endif %}
+            </div>
+            <div class="submission-content">
+                <form method="POST">
+                    {% csrf_token %}
+                    <table class="small scroll">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Display Email Link?</th>
+                            <th>Institution</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody id="sortable">
+                        {% for f_author in article.frozen_authors %}
+                            <tr id="authors-{{ f_author.pk }}">
+                                <td><i class="fa fa-sort"></i></td>
+                                <td>{{ f_author.full_name|se_can_see_pii:article }}</td>
+                                <td>{{ f_author.email|se_can_see_pii:article }}</td>
+                                <td>{{ f_author.display_email|bool_fa }}</td>
+                                <td>{{ f_author.institution|se_can_see_pii:article }}</td>
+                                <td>{% if can_see_pii %}
+                                <a href="?author={{ f_author.pk }}&return={{ return }}"><i
+                                        class="fa fa-edit">&nbsp;</i>Edit</a>
+                                {% else %}
+                                    Author data cannot be edited
+                                {% endif %}
+                                </td>
+                                <td>
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <button type="submit" name="delete" value="{{ f_author.pk }}"><i
+                                                class="fa fa-trash">&nbsp;</i>Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="pull-right">
+                        <button class="success button" type="submit" name="back">
+                            <i class="fa fa-arrow-left">&nbsp;</i>Back
+                        </button>
+                        <button class="success button" type="submit" name="close">
+                            <i class="fa fa-close">&nbsp;</i>Save & Close
+                        </button>
+                        <button class="success button" type="submit" name="continue">
+                            <i class="fa fa-arrow-right">&nbsp;</i>Save & Continue
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% include "admin/elements/submission/edit_author.html" %}
+{% endblock body %}
+
+{% block js %}
+    {% if modal %}
+        {% include "admin/elements/open_modal.html" with target=modal %}
+    {% endif %}
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+    <script type="text/javascript" src="{% static "common/js/jq-ui.min.js" %}"></script>
+    <script src="{% static "admin/js/csrf.js" %}"></script>
+    <script>
+        $( "#sortable" ).sortable({
+            update: function (event, ui) {
+                var data = $(this).sortable('serialize');
+                console.log(data);
+                // POST to server using $.post or $.ajax
+                $.ajax({
+                    data: data,
+                    type: 'POST',
+                    url: '{% url 'order_authors' article.pk %}'
+                });
+            }
+        });
+        $( "#sortable" ).disableSelection();
+    </script>
+{% endblock js %}
+

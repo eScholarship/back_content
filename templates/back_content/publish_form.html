@@ -1,0 +1,67 @@
+{% extends "admin/core/base.html" %}
+{% load foundation %}
+
+{% block title %}Back Content Submission - Publish{% endblock %}
+
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    <li><a href="{% url 'bc_index' %}">Back Content Plugin</a></li>
+    <li>{{ article.safe_title }}</li>
+{% endblock breadcrumbs %}
+
+{% block body %}
+<section class="content">
+    <div class="row expanded">
+        <div class="large-12 columns box">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="title-area">
+                    <h2 id="section-four">4. Publication Info</h2>
+                </div>
+                <div class="large-4 columns">
+                    {{ pub_form.date_published|foundation }}
+                </div>
+                <div class="large-4 columns">
+                    {{ pub_form.date_accepted|foundation }}
+                </div>
+                <div class="large-4 columns">
+                    {{ pub_form.render_galley|foundation }}
+                </div>
+                <div class="large-4 columns">
+                    {{ pub_form.primary_issue|foundation }}
+                </div>
+                <div class="large-4 columns">
+                    {{ pub_form.page_numbers|foundation }}
+                </div>
+                <div class="large-4 columns">
+                    <br/>
+                    {{ pub_form.peer_reviewed|foundation }}
+                </div>
+                <div class="large-12 columns">
+                    {% if article and article.date_published %}
+                    <p>More Pub Info is available on the <a href="{% url 'publish_article' article.pk %}">Pre Publication Checklist</a>.</p>
+                    {% endif %}
+                </div>
+                <div class="large-12 columns">
+                    <div class="pull-right">
+                        <button class="success button" type="submit" name="back">
+                            <i class="fa fa-arrow-left">&nbsp;</i>Back
+                        </button>
+                        <button class="success button" type="submit" name="save_another">
+                            Save & Add Another
+                        </button>
+                        <button class="success button" type="submit" name="save_close">
+                            Save & Close
+                        </button>
+                        <button class="success button" type="submit" name="publish">
+                            <i class="fa fa-check">&nbsp;</i>
+                            {% trans "Publish" %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock body %}
