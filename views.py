@@ -63,7 +63,7 @@ def create_article(request):
                                    journal=request.journal)
         deposit_form = DepositAgreementForm(request.POST)
         if article_form.is_valid() and deposit_form.is_valid():
-            article = article_form.save()
+            article = article_form.save(request=request)
             article.journal = request.journal
             article.owner = request.user
             article.save()
