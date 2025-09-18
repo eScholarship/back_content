@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse_lazy
 from django.utils.text import format_lazy
+from django.core.exceptions import ValidationError
 
 from submission.models import Article, Licence, Section, FieldAnswer, Field
 from review.logic import render_choices
@@ -38,12 +39,18 @@ class PublicationInfo(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.is_publish = kwargs.pop("is_publish", False)
         super(PublicationInfo, self).__init__(*args, **kwargs)
         if 'instance' in kwargs:
             article = kwargs['instance']
             self.fields['primary_issue'].queryset = article.journal.issue_set.all()
             self.fields['render_galley'].queryset = article.galley_set.all()
 
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.is_publish and cleaned_data["primary_issue"] is None:
+            raise ValidationError("Please select an issue before publishing")
+        return cleaned_data
 
 class RemoteArticle(forms.ModelForm):
     class Meta:
