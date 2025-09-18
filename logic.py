@@ -74,11 +74,12 @@ def get_and_parse_doi_metadata(r, request, doi):
         messages.add_message(request, messages.SUCCESS, id_message)
 
     for author in message.get('author', None):
+        affiliation = author['affiliation'][0].get('name', '') if len(author['affiliation']) > 0 else ""
         new_author = core_models.Account.objects.create(
             email="{0}@journal.com".format(uuid.uuid4()),
             first_name=author.get('given', ''),
             last_name=author.get('family', ''),
-            institution=author['affiliation'][0].get('name', '')
+            institution=affiliation,
         )
         article.authors.add(new_author)
 

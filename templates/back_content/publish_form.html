@@ -17,8 +17,15 @@
             <form method="POST">
                 {% csrf_token %}
                 <div class="title-area">
-                    <h2 id="section-four">4. Publication Info</h2>
+                    <h2 id="section">Publication Info</h2>
                 </div>
+                {% if pub_form.non_field_errors %}
+                <div class="card-section">
+                    {% for e in pub_form.non_field_errors %}
+                        <div class="alert alert-warning" role="alert">{{ e }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
                 <div class="large-4 columns">
                     {{ pub_form.date_published|foundation }}
                 </div>
