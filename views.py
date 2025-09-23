@@ -244,7 +244,8 @@ def publish(request, article_id):
 
     if request.method == 'POST':
         pub_form = PublicationInfo(request.POST, 
-                                   instance=article)
+                                   instance=article,
+                                   is_publish=('publish' in request.POST))
         if pub_form.is_valid():
             article = pub_form.save()
             
@@ -309,11 +310,11 @@ def doi_import(request):
             if mode == 'doi':
                 r = requests.get('https://api.crossref.org/v1/works/{0}'.format(url)).json()
                 article = get_and_parse_doi_metadata(r, request, doi=url)
-                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+                return redirect(reverse('bc_edit_article', kwargs={'article_id': article.pk}))
             else:
                 r = requests.get(url)
                 article = parse_url_results(r, request)
-                return redirect(reverse('bc_article', kwargs={'article_id': article.pk}))
+                return redirect(reverse('bc_edit_article', kwargs={'article_id': article.pk}))
 
     template = 'back_content/doi_import.html'
     context = {
