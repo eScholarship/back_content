@@ -2,7 +2,6 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse_lazy
 from django.utils.text import format_lazy
-from django.core.exceptions import ValidationError
 
 from submission.models import Article, Licence, Section, FieldAnswer, Field
 from review.logic import render_choices
@@ -39,18 +38,14 @@ class PublicationInfo(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        self.is_publish = kwargs.pop("is_publish", False)
         super(PublicationInfo, self).__init__(*args, **kwargs)
+        self.fields['date_published'].required = True
+        self.fields['primary_issue'].required = True
         if 'instance' in kwargs:
             article = kwargs['instance']
             self.fields['primary_issue'].queryset = article.journal.issue_set.all()
             self.fields['render_galley'].queryset = article.galley_set.all()
 
-    def clean(self):
-        cleaned_data = super().clean()
-        if self.is_publish and cleaned_data["primary_issue"] is None:
-            raise ValidationError("Please select an issue before publishing")
-        return cleaned_data
 
 class RemoteArticle(forms.ModelForm):
     class Meta:
@@ -117,15 +112,21 @@ class ArticleInfo(KeywordModelForm):
 
             if not journal.submissionconfiguration.language:
                 self.fields.pop('language')
+            else:
+                self.fields['language'].initial = journal.submissionconfiguration.default_language
 
             if not journal.submissionconfiguration.license:
                 self.fields.pop('license')
+            else:
+                self.fields['license'].initial = journal.submissionconfiguration.default_license
 
             if not journal.submissionconfiguration.keywords:
                 self.fields.pop('keywords')
 
             if not journal.submissionconfiguration.section:
                 self.fields.pop('section')
+            else:
+                self.fields['section'].initial = journal.submissionconfiguration.default_section
 
         if submission_summary:
             self.fields['non_specialist_summary'].required = True
