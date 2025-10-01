@@ -244,8 +244,7 @@ def publish(request, article_id):
 
     if request.method == 'POST':
         pub_form = PublicationInfo(request.POST, 
-                                   instance=article,
-                                   is_publish=('publish' in request.POST))
+                                   instance=article)
         if pub_form.is_valid():
             article = pub_form.save()
             
