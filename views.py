@@ -17,7 +17,7 @@ from submission.models import (Article,
                                FrozenAuthor,
                                STAGE_PUBLISHED)
 from submission.forms import FileDetails, EditFrozenAuthor
-from submission.logic import get_author
+from submission.logic import add_new_author_from_form, get_credit_form
 
 from production.forms import GalleyForm
 from production.logic import (save_galley,
@@ -126,48 +126,36 @@ def add_authors(request, article_id):
         pk=article_id,
         journal=request.journal,
     )
-
-    frozen_author, modal, author_form = None, None, EditFrozenAuthor()
-    if request.GET.get('author'):
-        frozen_author, modal = get_author(request, article)
-        author_form = EditFrozenAuthor(instance=frozen_author)
-    elif request.GET.get('modal') == 'author':
-        modal = 'author'
-
+    author_form = EditFrozenAuthor()
+    modal = None
 
     if request.method == "POST":
-        if 'author' in request.POST:
-            author_form = EditFrozenAuthor(
-                request.POST,
-                instance=frozen_author,
-            )
-
-            if author_form.is_valid():
-                saved_author = author_form.save()
-                saved_author.article = article
-                saved_author.save()
-                messages.add_message(
-                    request,
-                    messages.SUCCESS,
-                    _('Author {author_name} updated.').format(
-                        author_name=saved_author.full_name(),
-                    ),
-                )
-                return redirect(reverse('bc_add_authors', kwargs={"article_id": article.pk}))
-        elif 'delete' in request.POST:
-            frozen_author_id = request.POST.get('delete')
-            frozen_author = get_object_or_404(
-                FrozenAuthor,
-                pk=frozen_author_id,
-                article=article,
-                article__journal=request.journal,
-            )
-            frozen_author.delete()
-            messages.add_message(
+        if 'add_author' in request.POST:
+            add_new_author_from_form(
                 request,
-                messages.SUCCESS,
-                _('Frozen Author deleted.'),
+                article,
             )
+            return redirect(reverse('bc_add_authors', kwargs={"article_id": article.pk}))
+        elif 'remove_author' in request.POST:
+            author_pk = request.POST.get('remove_author', None)
+            if author_pk:
+                author_to_remove = get_object_or_404(
+                    FrozenAuthor,
+                    pk=author_pk,
+                )
+                author_to_remove.delete()
+                if author_to_remove.author == article.correspondence_author:
+                    article.correspondence_author = None
+                    article.save()
+                messages.success(
+                    request,
+                    f'{author_to_remove} removed from article.',
+                )
+            else:
+                 messages.warning(
+                    request,
+                    f'No author ID provided.',
+                )
             return redirect(reverse('bc_add_authors', kwargs={"article_id": article.pk}))
         else:
             if "continue" in request.POST:
@@ -177,11 +165,16 @@ def add_authors(request, article_id):
             else:
                 return redirect(reverse('bc_index'))
 
+    authors = []
+    for author, credits in article.authors_and_credits().items():
+        credit_form = get_credit_form(request, author)
+        authors.append((author, credits, credit_form))
+
     context = {
         'article': article,
-        'author_form': author_form,
+        'form': author_form,
         "modal": modal,
-        'frozen_author': frozen_author,
+        "authors": authors,
     }
     return render(request, "back_content/author_form.html", context)
 
@@ -406,13 +399,9 @@ class BCPAuthorSearch(BaseUserList):
                 pk=author_id,
             )
             if author in self.get_queryset():
-                self.article.authors.add(author)
-                ArticleAuthorOrder.objects.get_or_create(
-                    article=self.article,
-                    author=author,
-                    defaults={
-                        'order': self.article.next_author_sort(),
-                    }
+                author, _created = FrozenAuthor.get_or_snapshot_if_email_found(
+                    author.email,
+                    self.article,
                 )
                 messages.success(
                     request,

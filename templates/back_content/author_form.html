@@ -17,71 +17,25 @@
         <div class="large-12 columns box">
             <div class="title-area">
                 <h2 id="edit-metadata-authors">Article Authors</h2>
-                {% if frozen_author %}
-                    <a href="{% url 'edit_metadata' article.pk %}?modal=author&return={{ return }}" class="button">Add Author</a>
-                {% else %}
-                    <a href="#" class="button" data-open="author">Add Author</a>
-                {% endif %}
             </div>
-            <div class="submission-content">
-                <form method="POST">
-                    {% csrf_token %}
-                    <table class="small scroll">
-                        <thead>
-                        <tr>
-                            <th></th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Display Email Link?</th>
-                            <th>Institution</th>
-                            <th>Edit</th>
-                            <th>Delete</th>
-                        </tr>
-                        </thead>
-                        <tbody id="sortable">
-                        {% for f_author in article.frozen_authors %}
-                            <tr id="authors-{{ f_author.pk }}">
-                                <td><i class="fa fa-sort"></i></td>
-                                <td>{{ f_author.full_name|se_can_see_pii:article }}</td>
-                                <td>{{ f_author.email|se_can_see_pii:article }}</td>
-                                <td>{{ f_author.display_email|bool_fa }}</td>
-                                <td>{{ f_author.institution|se_can_see_pii:article }}</td>
-                                <td>{% if can_see_pii %}
-                                <a href="?author={{ f_author.pk }}&return={{ return }}"><i
-                                        class="fa fa-edit">&nbsp;</i>Edit</a>
-                                {% else %}
-                                    Author data cannot be edited
-                                {% endif %}
-                                </td>
-                                <td>
-                                    <form method="POST">
-                                        {% csrf_token %}
-                                        <button type="submit" name="delete" value="{{ f_author.pk }}"><i
-                                                class="fa fa-trash">&nbsp;</i>Delete
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                    <div class="pull-right">
-                        <button class="success button" type="submit" name="back">
-                            <i class="fa fa-arrow-left">&nbsp;</i>Back
-                        </button>
-                        <button class="success button" type="submit" name="close">
-                            <i class="fa fa-close">&nbsp;</i>Save & Close
-                        </button>
-                        <button class="success button" type="submit" name="continue">
-                            <i class="fa fa-arrow-right">&nbsp;</i>Save & Continue
-                        </button>
-                    </div>
-                </form>
+            <div class="content" data-equalizer data-equalize-on="medium">
+                <div class="large-4 columns" data-equalizer-watch>
+                    <p>{% trans "You can add an author by clicking the button below. This will open a popup modal for you to complete their details. If you do not have a legitimate email address for this author use @journal.com as a prefix for their email address and Janeway will ignore it." %}</p>
+                    <a href="#" data-open="author" class="small success button">{% trans "Add New Author" %}</a>
+                    {% include "back_content/elements/add_new_author.html" %}
+                    <p>{% trans "If you know of an existing author, you can search for them." %}</p>
+                    <a href="{% url 'bc_article_authors' article.pk %}" class="small success button">Search Accounts for Authors</a>
+
+                </div>
+                <div class="large-8 columns" data-equalizer-watch>
+                    <h4>{% trans "Current Authors" %}</h4>
+                    {% include "elements/current_authors.html" %}
+                </div>
             </div>
         </div>
     </div>
 </section>
-{% include "admin/elements/submission/edit_author.html" %}
+{% include "back_content/elements/add_new_author.html" %}
 {% endblock body %}
 
 {% block js %}
