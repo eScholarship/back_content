@@ -52,27 +52,3 @@
 </section>
 {% endblock body %}
 
-{% block js %}
-    {% if modal %}
-        {% include "admin/elements/open_modal.html" with target=modal %}
-    {% endif %}
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
-    <script type="text/javascript" src="{% static "common/js/jq-ui.min.js" %}"></script>
-    <script src="{% static "admin/js/csrf.js" %}"></script>
-    <script>
-        $( "#sortable" ).sortable({
-            update: function (event, ui) {
-                var data = $(this).sortable('serialize');
-                console.log(data);
-                // POST to server using $.post or $.ajax
-                $.ajax({
-                    data: data,
-                    type: 'POST',
-                    url: '{% url 'order_authors' article.pk %}'
-                });
-            }
-        });
-        $( "#sortable" ).disableSelection();
-    </script>
-{% endblock js %}
-
