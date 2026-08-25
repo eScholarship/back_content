@@ -18,7 +18,6 @@ from submission.models import (Article,
                                STAGE_PUBLISHED)
 from submission.forms import FileDetails, EditFrozenAuthor
 from submission.logic import (add_new_author_from_form,
-                              get_credit_form,
                               get_current_authors)
 from production.forms import GalleyForm
 from production.logic import (save_galley,
