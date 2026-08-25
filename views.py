@@ -17,8 +17,8 @@ from submission.models import (Article,
                                FrozenAuthor,
                                STAGE_PUBLISHED)
 from submission.forms import FileDetails, EditFrozenAuthor
-from submission.logic import add_new_author_from_form, get_credit_form
-
+from submission.logic import (add_new_author_from_form,
+                              get_current_authors)
 from production.forms import GalleyForm
 from production.logic import (save_galley,
                               get_all_galleys,
@@ -165,10 +165,7 @@ def add_authors(request, article_id):
             else:
                 return redirect(reverse('bc_index'))
 
-    authors = []
-    for author, credits in article.authors_and_credits().items():
-        credit_form = get_credit_form(request, author)
-        authors.append((author, credits, credit_form))
+    authors = get_current_authors(article, request)
 
     context = {
         'article': article,
